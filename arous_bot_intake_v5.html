@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arous AI — Bot Configuration Intake</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07070f;
+    --surface: #0f0f1a;
+    --surface2: #161626;
+    --border: rgba(137,174,230,0.2);
+    --accent: #89AEE6;
+    --accent2: #89AEE6;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(137,174,230,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container { max-width: 680px; margin: 0 auto; position: relative; z-index: 1; }
+  .header { text-align: center; margin-bottom: 48px; }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .logo::before, .logo::after { content: ''; width: 32px; height: 1px; background: var(--border); }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle { color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 480px; margin: 0 auto; }
+  .progress-bar { height: 2px; background: var(--surface2); border-radius: 2px; margin-bottom: 48px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+  .section { margin-bottom: 40px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .section-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #4A7BC4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent2); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 24px; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .required { color: var(--accent); font-size: 11px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: -4px; }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="text"], input[type="time"], select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(137,174,230,0.1); }
+  input::placeholder, textarea::placeholder { color: var(--muted); }
+  textarea { resize: vertical; min-height: 90px; }
+  select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b8a' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  select option { background: #161626; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 500px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+  .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 500px) { .checkbox-grid { grid-template-columns: 1fr; } }
+  .checkbox-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; user-select: none;
+  }
+  .checkbox-item:hover { border-color: var(--accent); }
+  .checkbox-item.checked { border-color: var(--accent); background: rgba(137,174,230,0.08); }
+  .checkbox-item input[type="checkbox"] { display: none; }
+  .checkbox-box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .checkbox-item.checked .checkbox-box { background: var(--accent); border-color: var(--accent); }
+  .checkbox-item.checked .checkbox-box::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+  .checkbox-label { font-size: 13px; color: var(--text); }
+  .radio-group { display: flex; flex-direction: column; gap: 10px; }
+  .radio-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; user-select: none;
+  }
+  .radio-item:hover { border-color: var(--accent); }
+  .radio-item.selected { border-color: var(--accent); background: rgba(137,174,230,0.08); }
+  .radio-item input[type="radio"] { display: none; }
+  .radio-dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .radio-item.selected .radio-dot { border-color: var(--accent); }
+  .radio-item.selected .radio-dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .radio-label { font-size: 13px; color: var(--text); }
+  .color-row { display: flex; gap: 12px; align-items: center; }
+  input[type="color"] { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; padding: 2px; flex-shrink: 0; }
+  .divider { height: 1px; background: var(--border); margin: 4px 0; }
+  .hours-grid { display: grid; grid-template-columns: 100px 1fr; gap: 10px; align-items: center; }
+  .hours-grid .day-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .hours-row { display: flex; gap: 8px; align-items: center; }
+  .hours-row span { font-size: 12px; color: var(--muted); }
+  .hours-row input[type="time"] { flex: 1; }
+  .closed-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .closed-toggle input { width: auto; }
+  .addon-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .addon-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 16px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; user-select: none;
+  }
+  .addon-item:hover { border-color: var(--accent); }
+  .addon-item.checked { border-color: var(--accent); background: rgba(137,174,230,0.08); }
+  .addon-item input[type="checkbox"] { display: none; }
+  .addon-left { display: flex; align-items: center; gap: 10px; }
+  .addon-box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .addon-item.checked .addon-box { background: var(--accent); border-color: var(--accent); }
+  .addon-item.checked .addon-box::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+  .addon-name { font-size: 13px; color: var(--text); font-weight: 500; }
+  .addon-badge { font-size: 11px; color: var(--accent2); background: rgba(137,174,230,0.1); border-radius: 6px; padding: 2px 8px; font-weight: 600; }
+  .pro-badge { font-size: 10px; color: #f59e0b; background: rgba(245,158,11,0.1); border-radius: 6px; padding: 2px 6px; font-weight: 600; margin-left: 6px; }
+  .submit-wrap { margin-top: 48px; text-align: center; }
+  button[type="submit"] {
+    background: linear-gradient(135deg, #5A8FD4, #4A7BC4);
+    color: white; border: none; border-radius: 12px; padding: 16px 48px;
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+    letter-spacing: 0.05em; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    box-shadow: 0 8px 32px rgba(90,143,212,0.35);
+  }
+  button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(90,143,212,0.45); }
+  button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .submit-note { margin-top: 14px; font-size: 12px; color: var(--muted); }
+  .error-msg { display: none; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #f87171; margin-top: 16px; }
+  .success-screen { display: none; text-align: center; padding: 60px 20px; }
+  .success-icon { width: 72px; height: 72px; border-radius: 50%; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px; }
+  .success-screen h2 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+  .success-screen p { color: var(--muted); font-size: 15px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">Arous AI</div>
+    <h1>Bot Configuration<br>Intake Form</h1>
+    <p class="subtitle">Help us build your perfect AI concierge. The more detail you provide, the smarter your bot will be from day one.</p>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <form id="intakeForm">
+
+    <!-- SECTION 1: Business Info -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">Business Info</div>
+      </div>
+      <div class="card">
+        <div class="two-col">
+          <div class="field">
+            <label>Business Name <span class="required">*</span></label>
+            <input type="text" name="businessName" placeholder="Enter business name" required>
+          </div>
+          <div class="field">
+            <label>Your Name <span class="required">*</span></label>
+            <input type="text" name="contactName" placeholder="Enter your name" required>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Email Address <span class="required">*</span></label>
+            <input type="email" name="email" placeholder="hello@yourbusiness.com" required>
+          </div>
+          <div class="field">
+            <label>Phone Number</label>
+            <input type="tel" name="phone" placeholder="(615) 000-0000">
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Website URL</label>
+            <input type="text" name="website" placeholder="https://yourbusiness.com">
+          </div>
+          <div class="field">
+            <label>Website Platform</label>
+            <select name="platform">
+              <option value="">Select platform...</option>
+              <option>WordPress</option>
+              <option>Squarespace</option>
+              <option>Wix</option>
+              <option>Framer</option>
+              <option>Shopify</option>
+              <option>No website yet</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Physical Address</label>
+          <input type="text" name="address" placeholder="Enter physical address">
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Instagram URL</label>
+            <input type="text" name="instagram" placeholder="https://instagram.com/yourbusiness">
+          </div>
+          <div class="field">
+            <label>Facebook URL</label>
+            <input type="text" name="facebook" placeholder="https://facebook.com/yourbusiness">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: Branding -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">Branding</div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>What do you want your bot named?</label>
+          <p class="hint">e.g. "Jade", "GLO", your business name, or leave blank for default</p>
+          <input type="text" name="botName" placeholder="Jade">
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Primary Brand Color</label>
+          <div class="color-row">
+            <input type="color" name="primaryColorPicker" value="#89AEE6" oninput="document.getElementById('primaryHex').value=this.value">
+            <input type="text" id="primaryHex" name="primaryColor" placeholder="#89AEE6" style="max-width:160px" oninput="document.querySelector('[name=primaryColorPicker]').value=this.value">
+          </div>
+        </div>
+        <div class="field">
+          <label>Secondary Brand Color</label>
+          <div class="color-row">
+            <input type="color" name="secondaryColorPicker" value="#0a0a0f" oninput="document.getElementById('secondaryHex').value=this.value">
+            <input type="text" id="secondaryHex" name="secondaryColor" placeholder="#0a0a0f" style="max-width:160px" oninput="document.querySelector('[name=secondaryColorPicker]').value=this.value">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label>Chat Bubble Icon</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'iconOption')">
+              <input type="radio" name="iconOption" value="provide_url">
+              <div class="radio-dot"></div>
+              <span class="radio-label">I'll provide a logo URL</span>
+            </label>
+            <label class="radio-item" onclick="toggleRadio(this,'iconOption')">
+              <input type="radio" name="iconOption" value="use_default">
+              <div class="radio-dot"></div>
+              <span class="radio-label">Use a default Arous AI icon</span>
+            </label>
+          </div>
+        </div>
+        <div class="field" id="iconUrlField" style="display:none">
+          <label>Logo/Icon URL</label>
+          <input type="text" name="iconUrl" placeholder="https://yourbusiness.com/logo.png">
+        </div>
+        <div class="field">
+          <label>Brand Voice</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'brandVoice')">
+              <input type="radio" name="brandVoice" value="Friendly & Warm">
+              <div class="radio-dot"></div>
+              <span class="radio-label">Friendly & Warm</span>
+            </label>
+            <label class="radio-item" onclick="toggleRadio(this,'brandVoice')">
+              <input type="radio" name="brandVoice" value="Professional & Polished">
+              <div class="radio-dot"></div>
+              <span class="radio-label">Professional & Polished</span>
+            </label>
+            <label class="radio-item" onclick="toggleRadio(this,'brandVoice')">
+              <input type="radio" name="brandVoice" value="Luxurious & Elevated">
+              <div class="radio-dot"></div>
+              <span class="radio-label">Luxurious & Elevated</span>
+            </label>
+            <label class="radio-item" onclick="toggleRadio(this,'brandVoice')">
+              <input type="radio" name="brandVoice" value="Casual & Fun">
+              <div class="radio-dot"></div>
+              <span class="radio-label">Casual & Fun</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Knowledge Base -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">Knowledge Base & Content</div>
+      </div>
+      <div class="card">
+
+        <!-- Hours -->
+        <div class="field">
+          <label>Business Hours</label>
+          <p class="hint">Enter open/close times or check Closed</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+            <div id="hoursRows"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Services -->
+        <div class="field">
+          <label>Services Offered <span class="required">*</span></label>
+          <p class="hint">List each service with a brief description and price if applicable</p>
+          <textarea name="services" rows="6" placeholder="Swedish Massage — 60 min, $85. Full body relaxation massage...&#10;Deep Tissue — 60 min, $95. Targets chronic muscle tension...&#10;Hot Stone — 90 min, $120. Heated basalt stones for deep relaxation..." required></textarea>
+        </div>
+
+        <div class="field">
+          <label>Services NOT Offered</label>
+          <p class="hint">Helps the bot avoid misleading customers</p>
+          <input type="text" name="servicesNot" placeholder="e.g. We do not offer waxing, nails, or hair services">
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- FAQ -->
+        <div class="field">
+          <label>Top Customer Questions <span class="required">*</span></label>
+          <p class="hint">List the most common questions you get and the answers</p>
+          <textarea name="faq" rows="8" placeholder="Q: Do I need to book in advance?&#10;A: Yes, we recommend booking at least 48 hours ahead...&#10;&#10;Q: What should I wear?&#10;A: We provide robes and towels. Please arrive 10 min early...&#10;&#10;Q: Do you offer gift cards?&#10;A: Yes! Available in-store and online at..." required></textarea>
+        </div>
+
+        <div class="field">
+          <label>Cancellation & Rescheduling Policy</label>
+          <textarea name="cancelPolicy" rows="3" placeholder="e.g. We require 24 hours notice for cancellations. Late cancellations may be charged 50% of service price..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Deposit Required?</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'deposit')">
+              <input type="radio" name="deposit" value="No deposit required">
+              <div class="radio-dot"></div>
+              <span class="radio-label">No deposit required</span>
+            </label>
+            <label class="radio-item" onclick="toggleRadio(this,'deposit')">
+              <input type="radio" name="deposit" value="Deposit required">
+              <div class="radio-dot"></div>
+              <span class="radio-label">Yes — deposit required to book</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- About -->
+        <div class="field">
+          <label>About Your Business</label>
+          <p class="hint">How long in business, owner name, what makes you different, awards, certifications</p>
+          <textarea name="about" rows="4" placeholder="e.g. Founded in 2018 by Sarah Johnson, a licensed massage therapist with 15 years experience. We specialize in therapeutic massage for chronic pain relief. Voted Best Spa in Franklin 2023..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>What makes you different from competitors?</label>
+          <input type="text" name="differentiator" placeholder="e.g. We use only organic products, same-day appointments available, family owned...">
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Content sources -->
+        <div class="field">
+          <label>Content We Can Pull From</label>
+          <p class="hint">Give us URLs to scrape — we'll pull your existing content into the bot's knowledge base automatically</p>
+        </div>
+        <div class="field">
+          <label>Services Page URL</label>
+          <input type="text" name="servicesUrl" placeholder="https://yourbusiness.com/services">
+        </div>
+        <div class="field">
+          <label>Blog URL</label>
+          <input type="text" name="blogUrl" placeholder="https://yourbusiness.com/blog">
+        </div>
+        <div class="field">
+          <label>Any other pages to pull from?</label>
+          <input type="text" name="otherUrls" placeholder="e.g. FAQ page, About page URLs...">
+        </div>
+        <div class="field">
+          <label>Google Business Profile URL</label>
+          <input type="text" name="googleBiz" placeholder="https://maps.google.com/...">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION 4: Quick Reply Buttons -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">Quick Reply Buttons</div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>Which buttons do you want in the chat?</label>
+          <p class="hint">Select all that apply</p>
+          <div class="checkbox-grid">
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="Book Appointment"><div class="checkbox-box"></div><span class="checkbox-label">Book Appointment</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="View Services"><div class="checkbox-box"></div><span class="checkbox-label">View Services</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="Pricing"><div class="checkbox-box"></div><span class="checkbox-label">Pricing</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="Hours & Location"><div class="checkbox-box"></div><span class="checkbox-label">Hours & Location</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="Contact Us"><div class="checkbox-box"></div><span class="checkbox-label">Contact Us</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="Current Promotions"><div class="checkbox-box"></div><span class="checkbox-label">Current Promotions</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="Gift Cards"><div class="checkbox-box"></div><span class="checkbox-label">Gift Cards</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="buttons" value="Meet the Team"><div class="checkbox-box"></div><span class="checkbox-label">Meet the Team</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Any custom button text or actions?</label>
+          <input type="text" name="customButtons" placeholder="e.g. View Membership Options, See Before & After...">
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 5: Lead Capture -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">Lead Capture</div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>What info do you want collected from leads?</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadFields" value="Name"><div class="checkbox-box"></div><span class="checkbox-label">Name</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadFields" value="Email"><div class="checkbox-box"></div><span class="checkbox-label">Email</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadFields" value="Phone"><div class="checkbox-box"></div><span class="checkbox-label">Phone</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadFields" value="Preferred appointment time"><div class="checkbox-box"></div><span class="checkbox-label">Preferred Time</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadFields" value="Service interested in"><div class="checkbox-box"></div><span class="checkbox-label">Service Interest</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Where should leads be sent? <span class="required">*</span></label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadDest" value="Email"><div class="checkbox-box"></div><span class="checkbox-label">Email</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadDest" value="Google Sheet"><div class="checkbox-box"></div><span class="checkbox-label">Google Sheet</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadDest" value="CRM"><div class="checkbox-box"></div><span class="checkbox-label">CRM</span></label>
+            <label class="checkbox-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="leadDest" value="SMS"><div class="checkbox-box"></div><span class="checkbox-label">SMS Text</span></label>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Lead notification email <span class="required">*</span></label>
+            <input type="email" name="notifyEmail" placeholder="you@yourbusiness.com" required>
+          </div>
+          <div class="field">
+            <label>Lead notification phone</label>
+            <p class="hint">SMS only — requires Pro plan</p>
+            <input type="tel" name="notifyPhone" placeholder="(615) 000-0000">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: Integrations -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <div class="section-title">Integrations</div>
+      </div>
+      <div class="card">
+        <div class="two-col">
+          <div class="field">
+            <label>Booking System</label>
+            <select name="bookingSystem">
+              <option value="">None / Not sure</option>
+              <option>Mindbody</option>
+              <option>Boulevard</option>
+              <option>Vagaro</option>
+              <option>MassageBook</option>
+              <option>Calendly</option>
+              <option>Square Appointments</option>
+              <option>Acuity Scheduling</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>CRM System</label>
+            <select name="crm">
+              <option value="">None</option>
+              <option>HubSpot</option>
+              <option>GoHighLevel</option>
+              <option>Salesforce</option>
+              <option>Zoho</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Calendar System</label>
+          <div class="radio-group">
+            <label class="radio-item" onclick="toggleRadio(this,'calendar')"><input type="radio" name="calendar" value="Google Calendar"><div class="radio-dot"></div><span class="radio-label">Google Calendar</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'calendar')"><input type="radio" name="calendar" value="Outlook"><div class="radio-dot"></div><span class="radio-label">Microsoft Outlook</span></label>
+            <label class="radio-item" onclick="toggleRadio(this,'calendar')"><input type="radio" name="calendar" value="None"><div class="radio-dot"></div><span class="radio-label">None</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 7: Add-Ons -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">7</div>
+        <div class="section-title">Add-Ons (Optional)</div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>Interested in any of these? <span style="color:var(--muted);font-weight:400">(we'll discuss details after setup)</span></label>
+          <div class="addon-grid">
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Missed Call Text Back"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">📱 Missed Call Text Back</span><span class="pro-badge">PRO</span></div><span class="addon-badge">$49/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Appointment Reminders"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">⏰ Appointment Reminders</span><span class="pro-badge">PRO</span></div><span class="addon-badge">$59/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Review Requests"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">⭐ Review Requests</span><span class="pro-badge">PRO</span></div><span class="addon-badge">$49/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="SMS Workflows"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">💬 SMS Workflows</span><span class="pro-badge">PRO</span></div><span class="addon-badge">$79/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Google Calendar Sync"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">📅 Google Calendar Sync</span></div><span class="addon-badge">$79/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="CRM Integration"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">🗂️ CRM Integration</span></div><span class="addon-badge">$99/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Advanced Booking Logic"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">🔖 Advanced Booking Logic</span></div><span class="addon-badge">$99/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Multi-Location Support"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">📍 Multi-Location Support</span></div><span class="addon-badge">$149/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="AI FAQ Expansion"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">🤖 AI FAQ Expansion</span></div><span class="addon-badge">$149/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Custom Automations"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">⚙️ Custom Automations</span></div><span class="addon-badge">$299/mo</span></label>
+            <label class="addon-item" onclick="toggleCheck(this, event)"><input type="checkbox" name="addons" value="Not sure - advise me"><div class="addon-left"><div class="addon-box"></div><span class="addon-name">🤔 Not sure — advise me</span></div></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 8: Final Notes -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">8</div>
+        <div class="section-title">Final Notes</div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>Anything else we should know?</label>
+          <textarea name="notes" placeholder="e.g. We serve mostly female clients ages 30-55, we're closed on Sundays in winter, our parking is behind the building..."></textarea>
+        </div>
+        <div class="field">
+          <label>How did you hear about Arous AI?</label>
+          <input type="text" name="referral" placeholder="e.g. Referral, In-person visit, Instagram...">
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-wrap">
+      <button type="submit" id="submitBtn">Submit Configuration →</button>
+      <p class="submit-note">Sent securely to the Arous AI team · hello@arous.ai</p>
+      <div class="error-msg" id="errorMsg">Something went wrong. Please try again or email hello@arous.ai</div>
+    </div>
+
+  </form>
+
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✓</div>
+    <h2>You're all set!</h2>
+    <p>We received your bot configuration.<br>Expect to hear from us within 1 business day to confirm details and get your bot live.</p>
+  </div>
+
+</div>
+
+<script>
+  var WEBHOOK = 'https://arous.app.n8n.cloud/webhook/967317aa-4108-4887-b45f-b5f7ce607716';
+
+  // ─── BUILD HOURS GRID ─────────────────────────────────────────────────────
+  var days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  var hoursRows = document.getElementById('hoursRows');
+  days.forEach(function(day) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center';
+    row.innerHTML = `
+      <span style="font-size:13px;color:var(--muted);font-weight:500">${day}</span>
+      <div style="display:flex;gap:8px;align-items:center" id="row_${day}">
+        <input type="time" name="open_${day}" value="09:00" style="flex:1">
+        <span style="font-size:12px;color:var(--muted)">to</span>
+        <input type="time" name="close_${day}" value="17:00" style="flex:1">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap">
+          <input type="checkbox" name="closed_${day}" onchange="toggleClosed('${day}',this)" style="width:auto;cursor:pointer"> Closed
+        </label>
+      </div>`;
+    hoursRows.appendChild(row);
+  });
+
+  function toggleClosed(day, cb) {
+    var row = document.getElementById('row_' + day);
+    var inputs = row.querySelectorAll('input[type="time"]');
+    inputs.forEach(function(i) { i.disabled = cb.checked; i.style.opacity = cb.checked ? '0.3' : '1'; });
+  }
+
+  // ─── PROGRESS ─────────────────────────────────────────────────────────────
+  var form = document.getElementById('intakeForm');
+  var fill = document.getElementById('progressFill');
+  function updateProgress() {
+    var inputs = form.querySelectorAll('input[required], textarea[required]');
+    var filled = 0;
+    inputs.forEach(function(i) { if (i.value.trim()) filled++; });
+    fill.style.width = Math.round((filled / inputs.length) * 100) + '%';
+  }
+  form.addEventListener('input', updateProgress);
+
+  // ─── CHECKBOX ─────────────────────────────────────────────────────────────
+  function toggleCheck(el, e) {
+    e.preventDefault();
+    el.classList.toggle('checked');
+    var cb = el.querySelector('input[type="checkbox"]');
+    cb.checked = el.classList.contains('checked');
+  }
+
+  // ─── RADIO ────────────────────────────────────────────────────────────────
+  function toggleRadio(el, name) {
+    document.querySelectorAll('[name="' + name + '"]').forEach(function(r) {
+      r.closest('.radio-item').classList.remove('selected');
+      r.checked = false;
+    });
+    el.classList.add('selected');
+    el.querySelector('input[type="radio"]').checked = true;
+    if (name === 'iconOption') {
+      document.getElementById('iconUrlField').style.display =
+        el.querySelector('input').value === 'provide_url' ? 'flex' : 'none';
+    }
+  }
+
+  // ─── COLLECT CHECKBOXES ───────────────────────────────────────────────────
+  function getChecked(name) {
+    return Array.from(document.querySelectorAll('[name="' + name + '"]:checked'))
+      .map(function(el) { return el.value; }).join(', ');
+  }
+
+  // ─── BUILD HOURS DATA ─────────────────────────────────────────────────────
+  function getHours() {
+    var result = {};
+    days.forEach(function(day) {
+      var closed = document.querySelector('[name="closed_' + day + '"]').checked;
+      if (closed) { result[day] = 'Closed'; }
+      else {
+        var open = document.querySelector('[name="open_' + day + '"]').value;
+        var close = document.querySelector('[name="close_' + day + '"]').value;
+        result[day] = open + ' - ' + close;
+      }
+    });
+    return result;
+  }
+
+  // ─── SUBMIT ───────────────────────────────────────────────────────────────
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('submitBtn');
+    var errMsg = document.getElementById('errorMsg');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    errMsg.style.display = 'none';
+
+    var data = {
+      submittedAt: new Date().toISOString(),
+      businessName: form.businessName.value,
+      contactName: form.contactName.value,
+      email: form.email.value,
+      phone: form.phone.value,
+      website: form.website.value,
+      platform: form.platform.value,
+      address: form.address.value,
+      instagram: form.instagram.value,
+      facebook: form.facebook.value,
+      botName: form.botName.value,
+      primaryColor: form.primaryColor.value,
+      secondaryColor: form.secondaryColor.value,
+      iconOption: form.querySelector('[name="iconOption"]:checked') ? form.querySelector('[name="iconOption"]:checked').value : '',
+      iconUrl: form.iconUrl ? form.iconUrl.value : '',
+      brandVoice: form.querySelector('[name="brandVoice"]:checked') ? form.querySelector('[name="brandVoice"]:checked').value : '',
+      hours: JSON.stringify(getHours()),
+      services: form.services.value,
+      servicesNot: form.servicesNot.value,
+      faq: form.faq.value,
+      cancelPolicy: form.cancelPolicy.value,
+      deposit: form.querySelector('[name="deposit"]:checked') ? form.querySelector('[name="deposit"]:checked').value : '',
+      about: form.about.value,
+      differentiator: form.differentiator.value,
+      servicesUrl: form.servicesUrl.value,
+      blogUrl: form.blogUrl.value,
+      otherUrls: form.otherUrls.value,
+      googleBiz: form.googleBiz.value,
+      buttons: getChecked('buttons'),
+      customButtons: form.customButtons.value,
+      leadFields: getChecked('leadFields'),
+      leadDest: getChecked('leadDest'),
+      notifyEmail: form.notifyEmail.value,
+      notifyPhone: form.notifyPhone.value,
+      bookingSystem: form.bookingSystem.value,
+      crm: form.crm.value,
+      calendar: form.querySelector('[name="calendar"]:checked') ? form.querySelector('[name="calendar"]:checked').value : '',
+      addons: getChecked('addons'),
+      notes: form.notes.value,
+      referral: form.referral.value
+    };
+
+    try {
+      await fetch(WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      form.style.display = 'none';
+      document.getElementById('successScreen').style.display = 'block';
+    } catch(err) {
+      btn.disabled = false;
+      btn.textContent = 'Submit Configuration →';
+      errMsg.style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>
