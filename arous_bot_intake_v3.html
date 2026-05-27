@@ -10,9 +10,9 @@
     --bg: #07070f;
     --surface: #0f0f1a;
     --surface2: #161626;
-    --border: rgba(139,92,246,0.2);
-    --accent: #8b5cf6;
-    --accent2: #a78bfa;
+    --border: rgba(137,174,230,0.2);
+    --accent: #89AEE6;
+    --accent2: #89AEE6;
     --text: #e8e8f0;
     --muted: #6b6b8a;
   }
@@ -32,7 +32,7 @@
     transform: translateX(-50%);
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(137,174,230,0.12) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -70,7 +70,7 @@
   .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
   .section-num {
     width: 28px; height: 28px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #5b21b6);
+    background: linear-gradient(135deg, var(--accent), #4A7BC4);
     display: flex; align-items: center; justify-content: center;
     font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; flex-shrink: 0;
   }
@@ -92,7 +92,7 @@
     transition: border-color 0.2s, box-shadow 0.2s;
     width: 100%;
   }
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(137,174,230,0.1); }
   input::placeholder, textarea::placeholder { color: var(--muted); }
   textarea { resize: vertical; min-height: 90px; }
   select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6b8a' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
@@ -109,7 +109,7 @@
     transition: border-color 0.2s, background 0.2s; user-select: none;
   }
   .checkbox-item:hover { border-color: var(--accent); }
-  .checkbox-item.checked { border-color: var(--accent); background: rgba(139,92,246,0.08); }
+  .checkbox-item.checked { border-color: var(--accent); background: rgba(137,174,230,0.08); }
   .checkbox-item input[type="checkbox"] { display: none; }
   .checkbox-box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .checkbox-item.checked .checkbox-box { background: var(--accent); border-color: var(--accent); }
@@ -123,7 +123,7 @@
     transition: border-color 0.2s, background 0.2s; user-select: none;
   }
   .radio-item:hover { border-color: var(--accent); }
-  .radio-item.selected { border-color: var(--accent); background: rgba(139,92,246,0.08); }
+  .radio-item.selected { border-color: var(--accent); background: rgba(137,174,230,0.08); }
   .radio-item input[type="radio"] { display: none; }
   .radio-dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .radio-item.selected .radio-dot { border-color: var(--accent); }
@@ -147,25 +147,25 @@
     transition: border-color 0.2s, background 0.2s; user-select: none;
   }
   .addon-item:hover { border-color: var(--accent); }
-  .addon-item.checked { border-color: var(--accent); background: rgba(139,92,246,0.08); }
+  .addon-item.checked { border-color: var(--accent); background: rgba(137,174,230,0.08); }
   .addon-item input[type="checkbox"] { display: none; }
   .addon-left { display: flex; align-items: center; gap: 10px; }
   .addon-box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .addon-item.checked .addon-box { background: var(--accent); border-color: var(--accent); }
   .addon-item.checked .addon-box::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
   .addon-name { font-size: 13px; color: var(--text); font-weight: 500; }
-  .addon-badge { font-size: 11px; color: var(--accent2); background: rgba(139,92,246,0.1); border-radius: 6px; padding: 2px 8px; font-weight: 600; }
+  .addon-badge { font-size: 11px; color: var(--accent2); background: rgba(137,174,230,0.1); border-radius: 6px; padding: 2px 8px; font-weight: 600; }
   .pro-badge { font-size: 10px; color: #f59e0b; background: rgba(245,158,11,0.1); border-radius: 6px; padding: 2px 6px; font-weight: 600; margin-left: 6px; }
   .submit-wrap { margin-top: 48px; text-align: center; }
   button[type="submit"] {
-    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    background: linear-gradient(135deg, #5A8FD4, #4A7BC4);
     color: white; border: none; border-radius: 12px; padding: 16px 48px;
     font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
     letter-spacing: 0.05em; cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
-    box-shadow: 0 8px 32px rgba(124,58,237,0.35);
+    box-shadow: 0 8px 32px rgba(90,143,212,0.35);
   }
-  button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(124,58,237,0.45); }
+  button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(90,143,212,0.45); }
   button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .submit-note { margin-top: 14px; font-size: 12px; color: var(--muted); }
   .error-msg { display: none; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #f87171; margin-top: 16px; }
@@ -198,11 +198,11 @@
         <div class="two-col">
           <div class="field">
             <label>Business Name <span class="required">*</span></label>
-            <input type="text" name="businessName" placeholder="Raindrop Head Spa" required>
+            <input type="text" name="businessName" placeholder="Enter business name" required>
           </div>
           <div class="field">
             <label>Your Name <span class="required">*</span></label>
-            <input type="text" name="contactName" placeholder="Sarah Johnson" required>
+            <input type="text" name="contactName" placeholder="Enter your name" required>
           </div>
         </div>
         <div class="two-col">
@@ -236,7 +236,7 @@
         </div>
         <div class="field">
           <label>Physical Address</label>
-          <input type="text" name="address" placeholder="1800 Carothers Pkwy, Franklin TN 37067">
+          <input type="text" name="address" placeholder="Enter physical address">
         </div>
         <div class="two-col">
           <div class="field">
@@ -267,8 +267,8 @@
         <div class="field">
           <label>Primary Brand Color</label>
           <div class="color-row">
-            <input type="color" name="primaryColorPicker" value="#8b5cf6" oninput="document.getElementById('primaryHex').value=this.value">
-            <input type="text" id="primaryHex" name="primaryColor" placeholder="#8b5cf6" style="max-width:160px" oninput="document.querySelector('[name=primaryColorPicker]').value=this.value">
+            <input type="color" name="primaryColorPicker" value="#89AEE6" oninput="document.getElementById('primaryHex').value=this.value">
+            <input type="text" id="primaryHex" name="primaryColor" placeholder="#89AEE6" style="max-width:160px" oninput="document.querySelector('[name=primaryColorPicker]').value=this.value">
           </div>
         </div>
         <div class="field">
