@@ -265,7 +265,6 @@
   function showCompleteClass() {
     addMsg("📚 Complete HypnoBirthing Class — $395\n\n✓ 5 weekly sessions\n✓ Thursday 6:30–9:00 PM or Sunday 10:30 AM–1:00 PM\n✓ Includes: book, workbook, audio downloads, tote bag & handouts\n\nThis is the full HypnoBirthing® program — everything you need for a calm, confident birth.", 'bot');
     addRegisterBtn('Register Now →', 'https://birthingbycalm.com/classes/');
-    addButtons([
     addBackNav([
       { label: '⬅ Classes', action: showHypnoBirthing },
       { label: '🏠 Main Menu', action: showMainMenu },
@@ -275,7 +274,6 @@
   function showPrivateClass() {
     addMsg("🏠 Private HypnoBirthing Class — $695\n\n✓ Same complete curriculum as the group class\n✓ Fully customized schedule — you choose the times\n✓ Available in-person or via Zoom\n\nPerfect for families who want a flexible schedule, personalized instruction, or the convenience of learning from home via Zoom.", 'bot');
     addRegisterBtn('Register Now →', 'https://birthingbycalm.com/classes/');
-    addButtons([
     addBackNav([
       { label: '⬅ Classes', action: showHypnoBirthing },
       { label: '🏠 Main Menu', action: showMainMenu },
@@ -285,7 +283,6 @@
   function showRefresherCourse() {
     addMsg("🔄 HypnoBirthing Refresher Course — $275\n\n✓ Condensed 2-day course\n✓ Designed for previous HypnoBirthing parents\n✓ Refresh your skills before your new arrival\n\nA great way to reconnect with the techniques for your next birth.", 'bot');
     addRegisterBtn('Register Now →', 'https://birthingbycalm.com/classes/');
-    addButtons([
     addBackNav([
       { label: '⬅ Classes', action: showHypnoBirthing },
       { label: '🏠 Main Menu', action: showMainMenu },
@@ -295,7 +292,6 @@
   function showFreeWorkshop() {
     addMsg("🎁 Free Intro Workshop\n\n✓ Monthly intro event — no commitment required\n✓ Get a feel for HypnoBirthing before enrolling\n✓ Ask questions and meet Tiffany in person\n\nA wonderful first step for any expectant parent curious about HypnoBirthing.", 'bot');
     addRegisterBtn('Register Now →', 'https://birthingbycalm.com/workshops/');
-    addButtons([
     addBackNav([
       { label: '⬅ Classes', action: showHypnoBirthing },
       { label: '🏠 Main Menu', action: showMainMenu },
@@ -304,7 +300,6 @@
 
   function showPrivateHypnosis() {
     addMsg("🧠 Private Hypnosis Services\n\nTiffany offers personalized one-on-one hypnosis sessions for:\n\n✓ Stress Relief\n✓ Anxiety & Fear Reduction\n✓ Smoking Cessation\n✓ Weight Loss Support\n✓ Confidence & Goal Achievement\n\nLearn more: https://www.metrodetroithypnosis.com", 'bot');
-    addButtons([
     addBackNav([
       { label: '⬅ Services', action: showServiceCategories },
       { label: '🏠 Main Menu', action: showMainMenu },
@@ -313,7 +308,6 @@
 
   function showWellness() {
     addMsg("🧘 Wellness Services\n\nBirthing By Calm connects you with a community of wellness practitioners offering:\n\n✓ Yoga\n✓ Massage Therapy\n✓ Wellness Practitioners\n✓ Community Events\n\nLearn more: https://www.therootempowermentcenter.com", 'bot');
-    addButtons([
     addBackNav([
       { label: '⬅ Services', action: showServiceCategories },
       { label: '🏠 Main Menu', action: showMainMenu },
