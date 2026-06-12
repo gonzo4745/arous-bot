@@ -2,7 +2,7 @@
 
   // ─── CONFIG ───────────────────────────────────────────────────────────────
   var WEBHOOK = "https://arous.app.n8n.cloud/webhook/b7286461-b675-4882-84e4-d0dbb73a2ca3";
-  var GREETING = "Hello — I'm Arous Concierge.\n\nFeel free to ask questions about operational assessments, workflow improvements, AI automation, customer communication systems, or general business process ideas.\n\nHow can I help today?";
+  var GREETING = "Hi, I'm Arous Concierge. How can I help your business today?";
   var ICON = "https://i.imgur.com/jl9rwAJ.png";
   var SESSION_ID = Math.random().toString(36).slice(2);
 
