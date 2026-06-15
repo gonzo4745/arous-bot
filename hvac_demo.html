@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HVAC AI Demo — Arous AI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #07080f;
+    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+  }
+
+  .page-title {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #5b7fff;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 32px;
+  }
+
+  .tab-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    color: rgba(255,255,255,.6);
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { background: rgba(91,127,255,.15); border-color: rgba(91,127,255,.4); color: #fff; }
+  .tab-btn.active { background: rgba(91,127,255,.2); border-color: #5b7fff; color: #fff; }
+
+  .demo-container {
+    max-width: 440px;
+    margin: 0 auto;
+    min-height: 520px;
+    position: relative;
+  }
+
+  .demo-panel { display: none; }
+  .demo-panel.active { display: block; }
+
+  /* ── CHATBOT PANEL ── */
+  .chatbot-wrap {
+    background: #0a0a0f;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  }
+  .chat-header {
+    background: linear-gradient(135deg, #0a1628, #0d2255);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .chat-header-title { font-size: 14px; font-weight: 600; color: #fff; }
+  .chat-status { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+  .online-dot { display: inline-block; width: 7px; height: 7px; background: #22c55e; border-radius: 50%; margin-right: 5px; }
+  .chat-body { padding: 16px; min-height: 360px; display: flex; flex-direction: column; gap: 10px; }
+  .chatbot-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    color: rgba(255,255,255,.3);
+    font-size: 13px;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .chatbot-placeholder svg { opacity: .3; }
+  .chat-input-area {
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    display: flex;
+    gap: 8px;
+  }
+  .chat-input {
+    flex: 1;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+  }
+  .chat-send {
+    width: 40px; height: 40px;
+    border-radius: 10px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #1a56db, #3b82f6);
+    color: #fff; font-size: 16px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-footer { padding: 8px; text-align: center; color: rgba(255,255,255,.2); font-size: 10px; }
+  .embed-note {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255,255,255,.3);
+    margin-top: 12px;
+    font-style: italic;
+  }
+
+  /* ── PHONE DEMO ── */
+  .phone-demo {
+    background: #0d0f1a;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 0;
+  }
+  .phone-demo-header {
+    background: linear-gradient(135deg, #0a1628, #0d2255);
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .demo-body { padding: 24px 20px; min-height: 420px; }
+
+  /* steps */
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .step.visible { opacity: 1; transform: translateY(0); }
+
+  .step-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .step-icon.call { background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); }
+  .step-icon.miss { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.3); }
+  .step-icon.vm   { background: rgba(250,204,21,.1); border: 1px solid rgba(250,204,21,.25); }
+  .step-icon.sms  { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25); }
+  .step-icon.done { background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.4); }
+
+  .step-content {}
+  .step-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.4); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 4px; }
+  .step-text { font-size: 13.5px; color: rgba(255,255,255,.85); line-height: 1.5; }
+  .step-text.bubble {
+    background: rgba(255,255,255,.06);
+    border-radius: 4px 12px 12px 12px;
+    padding: 9px 12px;
+    display: inline-block;
+  }
+  .step-text.bubble-out {
+    background: linear-gradient(135deg, #1a3a8a, #2152c4);
+    border-radius: 12px 4px 12px 12px;
+    padding: 9px 12px;
+    display: inline-block;
+  }
+
+  .success-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(34,197,94,.1);
+    border: 1px solid rgba(34,197,94,.3);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  .success-badge.visible { opacity: 1; }
+  .success-badge-icon { font-size: 22px; }
+  .success-badge-text { font-size: 13px; font-weight: 600; color: #22c55e; }
+  .success-badge-sub { font-size: 11px; color: rgba(34,197,94,.7); }
+
+  /* ── SMS DEMO ── */
+  .sms-demo {
+    background: #0d0f1a;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .sms-header {
+    background: linear-gradient(135deg, #0a1628, #0d2255);
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sms-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(91,127,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: #5b7fff;
+  }
+  .sms-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .sms-sub { font-size: 11px; color: rgba(255,255,255,.4); }
+  .sms-body { padding: 16px; min-height: 380px; display: flex; flex-direction: column; gap: 10px; }
+
+  .sms-msg {
+    max-width: 78%;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .35s ease, transform .35s ease;
+  }
+  .sms-msg.visible { opacity: 1; transform: translateY(0); }
+  .sms-msg.customer { align-self: flex-end; }
+  .sms-msg.assistant { align-self: flex-start; }
+
+  .sms-bubble-customer {
+    background: linear-gradient(135deg, #1a3a8a, #2152c4);
+    color: #fff;
+    border-radius: 16px 4px 16px 16px;
+    padding: 9px 13px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .sms-bubble-assistant {
+    background: rgba(255,255,255,.07);
+    color: rgba(255,255,255,.9);
+    border-radius: 4px 16px 16px 16px;
+    padding: 9px 13px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .sms-sender { font-size: 10px; color: rgba(255,255,255,.35); margin-bottom: 3px; margin-left: 2px; }
+
+  .restart-btn {
+    display: block;
+    margin: 16px auto 0;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.15);
+    color: rgba(255,255,255,.5);
+    border-radius: 8px;
+    padding: 7px 18px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .restart-btn:hover { border-color: rgba(91,127,255,.5); color: #5b7fff; }
+
+  @media (max-width: 480px) {
+    .tab-btn { padding: 9px 14px; font-size: 13px; }
+    .page-subtitle { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<p class="page-title">Arous AI</p>
+<p class="page-subtitle">See AI in Action for HVAC</p>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showDemo('concierge', this)">💬 Website Concierge</button>
+  <button class="tab-btn" onclick="showDemo('missedcall', this)">📞 Missed Call Text-Back</button>
+  <button class="tab-btn" onclick="showDemo('sms', this)">📱 SMS Assistant</button>
+</div>
+
+<div class="demo-container">
+
+  <!-- ── CONCIERGE PANEL ── -->
+  <div id="demo-concierge" class="demo-panel active">
+    <div class="chatbot-wrap">
+      <div class="chat-header">
+        <div>
+          <div class="chat-header-title">ABC HVAC Assistant</div>
+          <div class="chat-status"><span class="online-dot"></span>Online — Available 24/7</div>
+        </div>
+      </div>
+      <div class="chat-body" id="cc-body" style="min-height:400px;"></div>
+      <div class="chat-input-area">
+        <input class="chat-input" placeholder="Ask about scheduling, pricing, emergency service..." readonly>
+        <button class="chat-send">&#10148;</button>
+      </div>
+      <div class="chat-footer">ABC HVAC · Powered by Arous AI</div>
+    </div>
+    <div class="success-badge" id="cc-success" style="margin-top:12px;">
+      <span class="success-badge-icon">✅</span>
+      <div>
+        <div class="success-badge-text">Lead Captured</div>
+        <div class="success-badge-sub">Customer inquiry converted to lead</div>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="runConcierge()">↺ Replay</button>
+  </div>
+
+  <!-- ── MISSED CALL PANEL ── -->
+  <div id="demo-missedcall" class="demo-panel">
+    <div class="phone-demo">
+      <div class="phone-demo-header">
+        <span>📞</span> Missed Call Text-Back Demo
+      </div>
+      <div class="demo-body" id="mc-body">
+
+        <div class="step" id="mc-1">
+          <div class="step-icon call">📞</div>
+          <div class="step-content">
+            <div class="step-label">Incoming Call</div>
+            <div class="step-text">Customer calls ABC HVAC</div>
+          </div>
+        </div>
+
+        <div class="step" id="mc-2">
+          <div class="step-icon miss">☎️</div>
+          <div class="step-content">
+            <div class="step-label">No Answer</div>
+            <div class="step-text">Technician is out on a job</div>
+          </div>
+        </div>
+
+        <div class="step" id="mc-3">
+          <div class="step-icon vm">📬</div>
+          <div class="step-content">
+            <div class="step-label">Voicemail</div>
+            <div class="step-text bubble">"Hi, you've reached ABC HVAC. We're assisting other customers right now. Please leave a message and we'll get back to you shortly."</div>
+          </div>
+        </div>
+
+        <div class="step" id="mc-4">
+          <div class="step-icon sms">📱</div>
+          <div class="step-content">
+            <div class="step-label">Automatic Text Sent</div>
+            <div class="step-text bubble">"Hey, this is Jim with ABC HVAC. I saw I missed your call. Send me your name, address, and a brief description of what's going on and I'll get back to you as soon as I can."</div>
+          </div>
+        </div>
+
+        <div class="step" id="mc-5">
+          <div class="step-icon call">💬</div>
+          <div class="step-content">
+            <div class="step-label">Customer Replies</div>
+            <div class="step-text bubble-out">"Daniel, Franklin TN. AC blowing warm air."</div>
+          </div>
+        </div>
+
+        <div class="step" id="mc-6">
+          <div class="step-icon sms">📱</div>
+          <div class="step-content">
+            <div class="step-label">Jim Responds</div>
+            <div class="step-text bubble">"Thanks Daniel. To help prevent potential damage to the system, please turn off your HVAC unit until a technician can inspect it. I'll contact you shortly."</div>
+          </div>
+        </div>
+
+        <div class="success-badge" id="mc-success">
+          <span class="success-badge-icon">✅</span>
+          <div>
+            <div class="success-badge-text">Lead Captured</div>
+            <div class="success-badge-sub">No call answered — zero leads lost</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <button class="restart-btn" onclick="runMissedCall()">↺ Replay</button>
+  </div>
+
+  <!-- ── SMS PANEL ── -->
+  <div id="demo-sms" class="demo-panel">
+    <div class="sms-demo">
+      <div class="sms-header">
+        <div class="sms-avatar">AI</div>
+        <div>
+          <div class="sms-name">ABC HVAC Assistant</div>
+          <div class="sms-sub"><span class="online-dot"></span>Always on</div>
+        </div>
+      </div>
+      <div class="sms-body" id="sms-body">
+      </div>
+    </div>
+    <div class="success-badge" id="sms-success" style="margin-top:12px;">
+      <span class="success-badge-icon">✅</span>
+      <div>
+        <div class="success-badge-text">Lead Captured</div>
+        <div class="success-badge-sub">Handled automatically — 24/7</div>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="runSMS()">↺ Replay</button>
+  </div>
+
+</div>
+
+<script>
+  var mcTimer = null;
+  var smsTimer = null;
+
+  function showDemo(id, btn) {
+    document.querySelectorAll('.demo-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('demo-' + id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'missedcall') runMissedCall();
+    if (id === 'sms') runSMS();
+    if (id === 'concierge') runConcierge();
+  }
+
+  function clearTimers(arr) { arr.forEach(function(t) { if (t) clearTimeout(t); }); }
+
+  var mcTimers = [];
+  function runMissedCall() {
+    mcTimers.forEach(clearTimeout);
+    mcTimers = [];
+    document.querySelectorAll('#mc-body .step').forEach(function(s) { s.classList.remove('visible'); });
+    document.getElementById('mc-success').classList.remove('visible');
+
+    var steps = ['mc-1','mc-2','mc-3','mc-4','mc-5','mc-6'];
+    var delays = [400, 2400, 4400, 7400, 10400, 12400];
+    steps.forEach(function(id, i) {
+      mcTimers.push(setTimeout(function() {
+        document.getElementById(id).classList.add('visible');
+      }, delays[i]));
+    });
+    mcTimers.push(setTimeout(function() {
+      document.getElementById('mc-success').classList.add('visible');
+    }, 14400));
+  }
+
+  var smsTimers = [];
+  var smsMessages = [
+    { role: 'customer', sender: 'Customer', text: 'My AC stopped working.' },
+    { role: 'assistant', sender: 'ABC HVAC Concierge', text: 'Sorry to hear that. Is the unit completely off or blowing warm air?' },
+    { role: 'customer', sender: 'Customer', text: 'Warm air.' },
+    { role: 'assistant', sender: 'ABC HVAC Concierge', text: 'To help prevent potential damage to the system, please turn off your HVAC unit until a technician can inspect it.' },
+    { role: 'assistant', sender: 'ABC HVAC Concierge', text: 'Can I get your name and service address?' },
+    { role: 'customer', sender: 'Customer', text: 'Daniel, Franklin TN.' },
+    { role: 'assistant', sender: 'ABC HVAC Concierge', text: 'Thank you Daniel. A member of our team will contact you shortly.' },
+  ];
+
+  function runSMS() {
+    smsTimers.forEach(clearTimeout);
+    smsTimers = [];
+    var body = document.getElementById('sms-body');
+    body.innerHTML = '';
+    document.getElementById('sms-success').classList.remove('visible');
+
+    var delay = 600;
+    smsMessages.forEach(function(msg) {
+      (function(m, d) {
+        smsTimers.push(setTimeout(function() {
+          var wrap = document.createElement('div');
+          wrap.className = 'sms-msg ' + m.role;
+
+          var sender = document.createElement('div');
+          sender.className = 'sms-sender';
+          sender.textContent = m.sender;
+
+          var bubble = document.createElement('div');
+          bubble.className = m.role === 'customer' ? 'sms-bubble-customer' : 'sms-bubble-assistant';
+          bubble.textContent = m.text;
+
+          wrap.appendChild(sender);
+          wrap.appendChild(bubble);
+          body.appendChild(wrap);
+
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              wrap.classList.add('visible');
+              body.scrollTop = body.scrollHeight;
+            });
+          });
+        }, d));
+      })(msg, delay);
+      delay += 2000;
+    });
+
+    smsTimers.push(setTimeout(function() {
+      document.getElementById('sms-success').classList.add('visible');
+    }, delay + 400));
+  }
+
+  var ccTimers = [];
+  function runConcierge() {
+    ccTimers.forEach(clearTimeout);
+    ccTimers = [];
+    var body = document.getElementById('cc-body');
+    body.innerHTML = '';
+    document.getElementById('cc-success').classList.remove('visible');
+
+    var seq = [
+      { type: 'msg',     role: 'customer',  sender: 'Customer',              text: 'What services do you provide?' },
+      { type: 'msg',     role: 'assistant', sender: 'ABC HVAC Concierge',    text: 'We provide HVAC repair, installation, maintenance plans, indoor air quality solutions, and emergency service.' },
+      { type: 'btns',    btns: ['🔧 Repair Services', '❄️ New Installation', '🛠️ Maintenance Plans', '🚨 Emergency Service'] },
+      { type: 'click',   label: '🛠️ Maintenance Plans' },
+      { type: 'msg',     role: 'assistant', sender: 'ABC HVAC Concierge',    text: 'Our maintenance plans include seasonal inspections, priority scheduling, and discounts on qualifying repairs.' },
+      { type: 'btns',    btns: ['📋 View Benefits', '💰 Pricing Options', '❓ Ask a Question'] },
+      { type: 'click',   label: '💰 Pricing Options' },
+      { type: 'msg',     role: 'assistant', sender: 'ABC HVAC Concierge',    text: 'Maintenance plans start at $19/month and vary based on system size and coverage.' },
+      { type: 'btns',    btns: ['📞 Have Someone Contact Me', '📅 Schedule Consultation'] },
+      { type: 'click',   label: '📞 Have Someone Contact Me' },
+      { type: 'msg',     role: 'assistant', sender: 'ABC HVAC Concierge',    text: 'Great. Can I get your name and phone number?' },
+      { type: 'msg',     role: 'customer',  sender: 'Customer',              text: 'Daniel, 615-555-1234' },
+      { type: 'msg',     role: 'assistant', sender: 'ABC HVAC Concierge',    text: 'Thank you Daniel. A member of our team will contact you shortly.' },
+      { type: 'success' },
+    ];
+
+    var delay = 600;
+    seq.forEach(function(item) {
+      (function(s, d) {
+        ccTimers.push(setTimeout(function() {
+
+          if (s.type === 'msg') {
+            var wrap = document.createElement('div');
+            wrap.style.cssText = 'max-width:82%;opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease;display:flex;flex-direction:column;' + (s.role === 'customer' ? 'align-self:flex-end;' : 'align-self:flex-start;');
+            var sender = document.createElement('div');
+            sender.className = 'sms-sender';
+            if (s.role === 'customer') sender.style.textAlign = 'right';
+            sender.textContent = s.sender;
+            var bubble = document.createElement('div');
+            bubble.className = s.role === 'customer' ? 'sms-bubble-customer' : 'sms-bubble-assistant';
+            bubble.textContent = s.text;
+            wrap.appendChild(sender);
+            wrap.appendChild(bubble);
+            body.appendChild(wrap);
+            requestAnimationFrame(function() { requestAnimationFrame(function() {
+              wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0)';
+              body.scrollTop = body.scrollHeight;
+            }); });
+
+          } else if (s.type === 'btns') {
+            var btnWrap = document.createElement('div');
+            btnWrap.className = 'cc-btnwrap';
+            btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-top:2px;align-self:flex-start;width:90%;opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease;';
+            s.btns.forEach(function(label) {
+              var b = document.createElement('button');
+              b.textContent = label;
+              b.style.cssText = 'background:transparent;border:1px solid rgba(167,139,250,.35);color:#a78bfa;border-radius:8px;padding:8px 12px;cursor:default;font-size:12.5px;text-align:left;font-family:inherit;transition:background .2s;';
+              btnWrap.appendChild(b);
+            });
+            body.appendChild(btnWrap);
+            requestAnimationFrame(function() { requestAnimationFrame(function() {
+              btnWrap.style.opacity = '1'; btnWrap.style.transform = 'translateY(0)';
+              body.scrollTop = body.scrollHeight;
+            }); });
+
+          } else if (s.type === 'click') {
+            var allWraps = body.querySelectorAll('.cc-btnwrap');
+            var last = allWraps[allWraps.length - 1];
+            if (last) {
+              last.querySelectorAll('button').forEach(function(b) {
+                if (b.textContent === s.label) {
+                  b.style.background = 'rgba(167,139,250,.2)';
+                  b.style.borderColor = '#a78bfa';
+                  b.style.color = '#fff';
+                }
+              });
+            }
+
+          } else if (s.type === 'success') {
+            document.getElementById('cc-success').classList.add('visible');
+          }
+
+        }, d));
+      })(item, delay);
+
+      if (item.type === 'msg')     delay += 2000;
+      else if (item.type === 'btns')  delay += 1200;
+      else if (item.type === 'click') delay += 1000;
+      else if (item.type === 'success') delay += 600;
+    });
+  }
+
+
+</script>
+</body>
+</html>
