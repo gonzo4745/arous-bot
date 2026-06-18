@@ -1,0 +1,530 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>ACME Chiropractic & Wellness</title><style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Georgia',serif;background:#f0ece4;min-height:100vh;display:flex;flex-direction:column;}.site-nav{background:#0D4F5C;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;}.site-logo{color:#fff;font-size:18px;font-weight:700;}.site-logo span{color:#7BAE9C;}.site-nav-links{display:flex;gap:24px;}.site-nav-links a{color:rgba(255,255,255,0.75);text-decoration:none;font-size:13px;font-family:Arial,sans-serif;}.hero{background:linear-gradient(135deg,#0D4F5C 0%,#0a3d48 60%,#083038 100%);padding:70px 40px 80px;text-align:center;color:#fff;}.hero-tag{display:inline-block;background:rgba(123,174,156,0.2);border:1px solid rgba(123,174,156,0.4);color:#7BAE9C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:20px;}.hero h1{font-size:42px;font-weight:700;line-height:1.2;margin-bottom:16px;max-width:600px;margin-left:auto;margin-right:auto;}.hero h1 em{color:#7BAE9C;font-style:normal;}.hero p{font-size:17px;color:rgba(255,255,255,0.75);max-width:480px;margin:0 auto 32px;font-family:Arial,sans-serif;line-height:1.6;}.hero-cta{display:inline-block;background:#D4A853;color:#fff;font-family:Arial,sans-serif;font-weight:700;font-size:14px;padding:14px 32px;border-radius:30px;text-decoration:none;}.services{padding:60px 40px;max-width:1100px;margin:0 auto;width:100%;}.services h2{text-align:center;font-size:28px;color:#0D4F5C;margin-bottom:8px;}.services-sub{text-align:center;color:#7BAE9C;font-family:Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:40px;}.services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}.service-card{background:#fff;border:1px solid rgba(13,79,92,0.1);border-radius:12px;padding:20px;text-align:center;}.service-icon{font-size:28px;margin-bottom:8px;}.service-card h3{font-size:13px;color:#0D4F5C;font-family:Arial,sans-serif;font-weight:700;}@media(max-width:600px){.hero h1{font-size:28px;}.hero{padding:50px 20px 60px;}.services{padding:40px 20px;}.site-nav-links{display:none;}}</style></head><body>
+<nav class="site-nav"><div class="site-logo">ACME <span>Chiropractic & Wellness</span></div><div class="site-nav-links"><a href="#">Services</a><a href="#">About</a><a href="#">New Patients</a><a href="#">Insurance</a><a href="#">Contact</a></div></nav>
+<div class="hero"><div class="hero-tag">Your Wellness Partner</div><h1>Feel Better.<br/><em>Live Better.</em> Move Better.</h1><p>Chiropractic care, advanced therapies, and whole-body wellness — all under one roof.</p><a href="#" class="hero-cta">Request an Appointment</a></div>
+<section class="services"><p class="services-sub">What we treat</p><h2>Conditions & Therapies</h2><div class="services-grid"><div class="service-card"><div class="service-icon">🔙</div><h3>Back Pain</h3></div><div class="service-card"><div class="service-icon">🫧</div><h3>Neck Pain</h3></div><div class="service-card"><div class="service-icon">🚗</div><h3>Auto Accident</h3></div><div class="service-card"><div class="service-icon">👨‍👩‍👧</div><h3>Family Care</h3></div><div class="service-card"><div class="service-icon">👶</div><h3>Pediatric</h3></div><div class="service-card"><div class="service-icon">🤰</div><h3>Prenatal</h3></div><div class="service-card"><div class="service-icon">⚡</div><h3>Neuropathy</h3></div><div class="service-card"><div class="service-icon">💡</div><h3>Cold Laser</h3></div><div class="service-card"><div class="service-icon">🌊</div><h3>Shockwave</h3></div><div class="service-card"><div class="service-icon">💆</div><h3>Hydromassage</h3></div><div class="service-card"><div class="service-icon">🏃</div><h3>Kinesiology Taping</h3></div><div class="service-card"><div class="service-icon">🥗</div><h3>Nutrition</h3></div></div></section>
+<script>
+(function () {
+  var WEBHOOK = 'https://arous.app.n8n.cloud/webhook/acme-chiro-concierge';
+  var GREETING = "Hi! I'm here to help you at ACME Chiropractic & Wellness.\n\nWhether you're dealing with pain, curious about our services, or ready to schedule — I'm happy to help guide you.\n\nWhat brings you in today?";
+  var SESSION_ID = Math.random().toString(36).slice(2);
+  var leadCaptureMode = false;
+  var leadStep = 0;
+  var leadData = {};
+  var currentCondition = null;
+
+  // ── CSS ──────────────────────────────────────────────────────────────────────
+  var style = document.createElement('style');
+  style.textContent = `
+    #acme-bubble{position:fixed;bottom:28px;right:28px;width:68px;height:68px;border:none;background:transparent;cursor:pointer;z-index:999999;transition:transform .2s ease;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+    #acme-bubble:hover{transform:scale(1.08);}
+    #acme-bubble-inner{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#0D4F5C 0%,#7BAE9C 100%);box-shadow:0 4px 18px rgba(13,79,92,0.45);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;animation:acmeSpinePulse 2.5s ease-in-out infinite;}
+    #acme-bubble-label{position:fixed;bottom:10px;right:28px;font-size:10px;color:#0D4F5C;font-family:Arial,sans-serif;font-weight:600;text-align:center;width:68px;z-index:999999;letter-spacing:0.3px;}
+    #acme-window{display:none;position:fixed;bottom:110px;right:28px;width:370px;height:580px;background:#F8F5F0;border-radius:18px;box-shadow:0 8px 40px rgba(13,79,92,0.18);z-index:999998;flex-direction:column;overflow:hidden;font-family:Arial,sans-serif;border:1px solid rgba(13,79,92,0.12);}
+    #acme-window.open{display:flex;}
+    #acme-header{background:linear-gradient(135deg,#0D4F5C 0%,#0a3d48 100%);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    #acme-header-info{display:flex;align-items:center;gap:10px;}
+    #acme-avatar{width:38px;height:38px;border-radius:50%;background:rgba(123,174,156,0.25);border:2px solid #7BAE9C;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+    #acme-name{font-size:14px;font-weight:700;color:#7BAE9C;display:block;}
+    #acme-sub{font-size:11px;color:rgba(255,255,255,0.6);display:block;}
+    #acme-close{background:none;border:none;color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;line-height:1;padding:0;transition:color .2s;}
+    #acme-close:hover{color:#fff;}
+    #acme-messages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;}
+    #acme-messages::-webkit-scrollbar{width:4px;}
+    #acme-messages::-webkit-scrollbar-thumb{background:#7BAE9C;border-radius:4px;}
+    .acme-msg{max-width:84%;padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.55;word-wrap:break-word;}
+    .acme-msg.bot{background:#fff;color:#2C3E50;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(13,79,92,0.08);border:1px solid rgba(13,79,92,0.07);}
+    .acme-msg.user{background:linear-gradient(135deg,#0D4F5C,#0a3d48);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+    #acme-menu-wrap{padding:4px 14px 10px;display:flex;flex-direction:column;gap:5px;flex-shrink:0;max-height:200px;overflow-y:auto;}
+    #acme-menu-wrap::-webkit-scrollbar{width:3px;}
+    #acme-menu-wrap::-webkit-scrollbar-thumb{background:#7BAE9C;border-radius:3px;}
+    .acme-menu-row{display:flex;gap:6px;flex-wrap:wrap;}
+    .acme-menu-col{display:flex;flex-direction:column;gap:5px;width:100%;}
+    .acme-btn{background:#fff;border:1.5px solid #0D4F5C;color:#0D4F5C;border-radius:20px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;white-space:normal;text-align:left;font-family:Arial,sans-serif;line-height:1.3;}
+    .acme-btn:hover{background:#0D4F5C;color:#fff;}
+    .acme-btn.gold{border-color:#D4A853;color:#D4A853;}
+    .acme-btn.gold:hover{background:#D4A853;color:#fff;}
+    .acme-btn.sage{border-color:#7BAE9C;color:#2C3E50;}
+    .acme-btn.sage:hover{background:#7BAE9C;color:#fff;}
+    #acme-input-wrap{display:flex;gap:8px;padding:10px 14px 14px;background:#F8F5F0;border-top:1px solid rgba(13,79,92,0.1);flex-shrink:0;}
+    #acme-input{flex:1;border:1.5px solid rgba(13,79,92,0.2);border-radius:22px;padding:9px 14px;font-size:13px;outline:none;background:#fff;color:#2C3E50;font-family:Arial,sans-serif;transition:border-color .2s;}
+    #acme-input:focus{border-color:#0D4F5C;}
+    #acme-send{background:linear-gradient(135deg,#0D4F5C,#0a3d48);border:none;border-radius:50%;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s;flex-shrink:0;}
+    #acme-send:hover{transform:scale(1.08);}
+    @keyframes acmePulse{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+    .acme-dot{width:7px;height:7px;border-radius:50%;background:#7BAE9C;animation:acmePulse 1.2s ease-in-out infinite;}
+    .acme-dot:nth-child(2){animation-delay:.2s}
+    .acme-dot:nth-child(3){animation-delay:.4s}
+    @keyframes acmeSpinePulse{0%,100%{box-shadow:0 4px 18px rgba(13,79,92,0.45)}50%{box-shadow:0 4px 26px rgba(123,174,156,0.7)}}
+    @media(max-width:420px){#acme-window{width:calc(100vw - 20px);right:10px;bottom:100px;height:72vh;}#acme-bubble{right:16px;bottom:20px;}#acme-bubble-label{right:16px;}}
+  `;
+  document.head.appendChild(style);
+
+  // ── DOM ──────────────────────────────────────────────────────────────────────
+  var bubble = document.createElement('button');
+  bubble.id = 'acme-bubble';
+  bubble.setAttribute('aria-label','Open chat');
+  bubble.innerHTML = '<div id="acme-bubble-inner"><span style="font-size:26px;line-height:1">🦴</span></div>';
+  document.body.appendChild(bubble);
+
+  var blabel = document.createElement('div');
+  blabel.id = 'acme-bubble-label';
+  blabel.textContent = 'Ask Us';
+  document.body.appendChild(blabel);
+
+  var win = document.createElement('div');
+  win.id = 'acme-window';
+  win.setAttribute('role','dialog');
+  win.setAttribute('aria-label','ACME Chiropractic Chat');
+  win.innerHTML = `
+    <div id="acme-header">
+      <div id="acme-header-info">
+        <div id="acme-avatar">🦴</div>
+        <div><span id="acme-name">ACME Chiropractic</span><span id="acme-sub">Wellness Concierge · Online</span></div>
+      </div>
+      <button id="acme-close" aria-label="Close chat">&times;</button>
+    </div>
+    <div id="acme-messages"></div>
+    <div id="acme-menu-wrap"></div>
+    <div id="acme-input-wrap">
+      <input id="acme-input" type="text" placeholder="Type your question..." autocomplete="off"/>
+      <button id="acme-send" aria-label="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>`;
+  document.body.appendChild(win);
+
+  var messages = document.getElementById('acme-messages');
+  var menuWrap = document.getElementById('acme-menu-wrap');
+  var input    = document.getElementById('acme-input');
+
+  // ── Knowledge Base ────────────────────────────────────────────────────────────
+  var KB = {
+    back_pain: {
+      label: 'Back Pain',
+      intro: "Back pain is one of the most common reasons people visit us — and chiropractic care is often very effective in addressing it.\n\nHere are some questions I can answer, or feel free to type your own:",
+      faqs: [
+        { q: "Can chiropractic care help with back pain?", a: "Many patients visit us for back pain caused by poor posture, repetitive movement, injuries, or everyday wear and tear. Our chiropractor will evaluate your condition and create a personalized treatment plan focused on improving movement, reducing discomfort, and supporting long-term spinal health." },
+        { q: "What happens during my first visit?", a: "Your first visit typically includes a consultation, health history review, and examination. Based on your condition, the doctor will discuss recommended treatment options and answer any questions you may have." },
+        { q: "Is chiropractic care safe?", a: "Chiropractic care is a widely used, non-invasive approach to managing back pain. Every patient is different, so treatment recommendations are based on your individual health history, symptoms, and goals." },
+        { q: "How many visits will I need?", a: "The number of visits varies depending on your condition, how long you've had symptoms, and your treatment goals. Some patients notice improvement quickly, while others benefit from ongoing care and maintenance visits." },
+        { q: "Will insurance cover treatment?", a: "Coverage varies by insurance plan. Our team can help verify your benefits and explain any out-of-pocket costs before treatment begins." },
+        { q: "Can chiropractic care help prevent future back pain?", a: "Many patients choose ongoing chiropractic care to help maintain spinal health, improve mobility, and reduce the likelihood of recurring back pain episodes." },
+      ]
+    },
+    neck_pain: {
+      label: 'Neck Pain',
+      intro: "Neck pain can be caused by everything from sleeping positions to stress to long hours at a desk. We help a lot of patients with this.\n\nHere are some common questions, or type your own:",
+      faqs: [
+        { q: "Can chiropractic care help with neck pain?", a: "Neck pain is a common condition we treat regularly. Through cervical adjustments and soft tissue therapy, we focus on improving mobility, reducing muscle tension, and addressing the root cause of discomfort." },
+        { q: "What causes neck pain?", a: "Neck pain can stem from many sources — poor posture, tech neck from screen time, muscle strain, herniated discs, or injuries. During your first visit, the doctor will evaluate your specific situation and recommend the most appropriate care." },
+        { q: "What happens during my first visit?", a: "Your first visit includes a consultation, health history review, and a physical examination of your neck and spine. The doctor will explain what they find and outline a treatment approach tailored to your needs." },
+        { q: "How many visits will I need?", a: "It depends on the nature and duration of your symptoms. Some patients experience significant relief in just a few visits, while others benefit from a longer care plan. We'll give you a clear picture after your evaluation." },
+        { q: "Will insurance cover neck pain treatment?", a: "Most major insurance plans include chiropractic coverage. Our team can verify your benefits before your first visit so you know what to expect." },
+        { q: "Can chiropractic help with headaches from neck tension?", a: "Yes — many headaches originate from tension and misalignment in the neck and upper spine. Chiropractic adjustments can help relieve the pressure contributing to these headaches for many patients." },
+      ]
+    },
+    auto_accident: {
+      label: 'Auto Accident Injury',
+      intro: "If you've been in an auto accident, getting evaluated quickly is important — even if you feel fine right now. Many injuries appear hours or days later.\n\nHere are common questions, or type your own:",
+      faqs: [
+        { q: "Should I see a chiropractor after a car accident?", a: "We recommend getting evaluated as soon as possible after an accident, even if you feel okay. Whiplash and soft tissue injuries often don't produce symptoms immediately but can worsen without treatment." },
+        { q: "What is whiplash and can you treat it?", a: "Whiplash is a neck injury caused by rapid back-and-forth movement during impact. It commonly causes neck pain, stiffness, and headaches. Chiropractic care is one of the most effective approaches for managing whiplash symptoms." },
+        { q: "Will my auto insurance cover treatment?", a: "Auto accident injuries are typically covered under Personal Injury Protection (PIP) or medical payments coverage in your auto policy. We can help you understand how to use your benefits and work with your insurance company." },
+        { q: "What if I was in an accident and don't have health insurance?", a: "We work with personal injury cases and can often work directly with your attorney or auto insurance on a lien basis. Our team will walk you through the options available to you." },
+        { q: "Do you provide documentation for legal purposes?", a: "Yes. We provide thorough clinical documentation of your injuries and treatment progress, which can be important for personal injury claims and legal proceedings." },
+        { q: "How soon after an accident should I come in?", a: "The sooner, the better — ideally within 24-72 hours. Early evaluation and treatment can make a significant difference in recovery time and supports your insurance or legal claim." },
+      ]
+    },
+    headaches: {
+      label: 'Headaches',
+      intro: "Many headaches are connected to tension, posture, and spinal alignment — which chiropractic care can directly address.\n\nHere are some common questions, or type your own:",
+      faqs: [
+        { q: "Can chiropractic care help with headaches?", a: "Many types of headaches — including tension headaches and cervicogenic headaches (originating from the neck) — respond well to chiropractic care. The doctor will evaluate the likely source of your headaches and recommend an appropriate treatment plan." },
+        { q: "What causes tension headaches?", a: "Tension headaches are often triggered by muscle tightness in the neck and shoulders, poor posture, stress, and spinal misalignment. Chiropractic adjustments and soft tissue work can help address these underlying factors." },
+        { q: "How is chiropractic different from just taking pain relievers?", a: "Chiropractic care focuses on addressing the physical cause of headaches rather than masking symptoms. For patients whose headaches stem from neck tension or spinal issues, this can produce longer-lasting results." },
+        { q: "What happens during my first visit for headaches?", a: "We'll review your headache history, frequency, and triggers during your consultation. The doctor will examine your neck, spine, and posture to identify contributing factors and recommend a personalized plan." },
+        { q: "How many visits will it take to see improvement?", a: "Results vary by patient, but many people notice improvement within a few visits, especially for tension-related headaches. We'll give you a clearer picture after your initial evaluation." },
+        { q: "Can I still take my medication while receiving chiropractic care?", a: "Chiropractic care works alongside your existing care — we're not asking you to stop anything. The doctor will review your health history and work collaboratively with your overall wellness plan." },
+      ]
+    },
+    neuropathy: {
+      label: 'Neuropathy',
+      intro: "Neuropathy — nerve pain, numbness, or tingling — can be a frustrating condition. Chiropractic care can be part of a supportive treatment approach.\n\nHere are some common questions, or feel free to type your own:",
+      faqs: [
+        { q: "Can chiropractic care help with neuropathy?", a: "Chiropractic care may help support patients experiencing neuropathy by addressing spinal pressure, improving circulation, and reducing nerve interference. The doctor will evaluate your specific case to determine if chiropractic care is appropriate for you." },
+        { q: "What are the symptoms of neuropathy?", a: "Common symptoms include numbness, tingling, burning sensations, or weakness — often in the hands, feet, or legs. These symptoms can have several causes, which is why a proper evaluation is important." },
+        { q: "What treatments do you use for neuropathy?", a: "Depending on your evaluation, the doctor may recommend spinal adjustments, Cold Laser Therapy to support nerve healing, and other supportive therapies. We take an individualized approach based on your symptoms and history." },
+        { q: "Is chiropractic safe if I have neuropathy?", a: "Chiropractic care is generally gentle and non-invasive. The doctor will review your health history and tailor any treatment to be appropriate and comfortable for your condition." },
+        { q: "How many visits will I need?", a: "Neuropathy treatment plans vary depending on the underlying cause, severity, and how long you've had symptoms. After your evaluation, we'll give you a clear picture of what a care plan may look like for you." },
+        { q: "Will insurance cover neuropathy treatment?", a: "Coverage depends on your individual insurance plan. Our team can verify your benefits before your first visit so there are no surprises." },
+      ]
+    }
+  };
+
+  // ── NLP routing maps ──────────────────────────────────────────────────────────
+  var NLP_MAP = [
+    { key: 'back_pain',    terms: ['back pain','back ache','backache','lower back','lumbar','sciatica','sciatic','herniated','bulging disc','disc pain','slipped disc','my back hurts','back is killing','spine pain','spinal pain'] },
+    { key: 'neck_pain',    terms: ['neck pain','neck ache','stiff neck','neck hurts','cervical','my neck','tech neck','whiplash neck','neck tension','neck stiffness','sore neck'] },
+    { key: 'auto_accident',terms: ['car accident','auto accident','auto injury','car crash','vehicle accident','hit by a car','rear end','fender bender','collision','wreck','car wreck','crash','mva','motor vehicle'] },
+    { key: 'headaches',    terms: ['headache','migraines','migraine','head pain','tension headache','head ache','head hurts','my head hurts','constant headaches','frequent headaches'] },
+    { key: 'neuropathy',   terms: ['neuropathy','nerve pain','numbness','tingling','burning sensation','pins and needles','hands numb','feet numb','nerve damage','peripheral neuropathy','numb feet','numb hands','tingly'] },
+  ];
+
+  // ── Menus ─────────────────────────────────────────────────────────────────────
+  var MAIN_MENU = [
+    { label: '🆕 New Patient',          value: '__NEW_PATIENT__' },
+    { label: '🤕 Pain & Injury',         value: '__PAIN_MENU__' },
+    { label: '👨‍👩‍👧 Family & Kids',          value: '__FAMILY__' },
+    { label: '💳 Insurance & Pricing',   value: '__INSURANCE__' },
+    { label: '📅 Schedule Appointment',  value: '__SCHEDULE__', gold: true },
+  ];
+
+  var PAIN_SUBMENU = [
+    { label: '🔙 Back Pain',             value: '__CONDITION__back_pain' },
+    { label: '🫧 Neck Pain',             value: '__CONDITION__neck_pain' },
+    { label: '🚗 Auto Accident Injury',  value: '__CONDITION__auto_accident' },
+    { label: '🤯 Headaches',             value: '__CONDITION__headaches' },
+    { label: '⚡ Neuropathy',            value: '__CONDITION__neuropathy' },
+    { label: '❓ Other / Not Sure',      value: '__OTHER_PAIN__' },
+  ];
+
+  var AFTER_FAQ_MENU = [
+    { label: '❓ Ask Another Question', value: '__FAQ_MORE__' },
+    { label: '💳 Insurance Questions',  value: '__INSURANCE__' },
+    { label: '📅 Schedule Consultation',value: '__SCHEDULE__', gold: true },
+    { label: '⬅ Pain & Injury',         value: '__PAIN_MENU__' },
+    { label: '🏠 Main Menu',            value: '__MAIN_MENU__' },
+  ];
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  function scrollBottom() { setTimeout(function(){ messages.scrollTop = messages.scrollHeight; }, 60); }
+
+  function addMsg(text, who) {
+    var d = document.createElement('div');
+    d.className = 'acme-msg ' + who;
+    d.innerHTML = text.replace(/\n/g, '<br>');
+    messages.appendChild(d);
+    scrollBottom();
+    return d;
+  }
+
+  function showThinking() {
+    var d = document.createElement('div');
+    d.className = 'acme-msg bot';
+    d.id = 'acme-thinking';
+    d.innerHTML = '<div class="acme-dot"></div><div class="acme-dot"></div><div class="acme-dot"></div>';
+    messages.appendChild(d);
+    scrollBottom();
+  }
+
+  function removeThinking() {
+    var t = document.getElementById('acme-thinking');
+    if (t) t.remove();
+  }
+
+  function clearMenu() { menuWrap.innerHTML = ''; }
+
+  // Render a flat row of buttons
+  function renderMenu(items) {
+    clearMenu();
+    if (!items || !items.length) return;
+    var row = document.createElement('div');
+    row.className = 'acme-menu-row';
+    items.forEach(function(item) {
+      var btn = document.createElement('button');
+      btn.className = 'acme-btn' + (item.gold ? ' gold' : item.sage ? ' sage' : '');
+      btn.textContent = item.label;
+      btn.onclick = function(){ handleUserInput(item.value); };
+      row.appendChild(btn);
+    });
+    menuWrap.appendChild(row);
+  }
+
+  // Render a vertical column of buttons (for FAQs)
+  function renderFAQMenu(faqs, conditionKey) {
+    clearMenu();
+    var col = document.createElement('div');
+    col.className = 'acme-menu-col';
+    faqs.forEach(function(faq) {
+      var btn = document.createElement('button');
+      btn.className = 'acme-btn sage';
+      btn.textContent = faq.q;
+      btn.onclick = function() {
+        addMsg(faq.q, 'user');
+        clearMenu();
+        addMsg(faq.a, 'bot');
+        setTimeout(function(){
+          renderMenu(AFTER_FAQ_MENU.map(function(m){
+            if (m.value === '__FAQ_MORE__') {
+              return { label: m.label, value: '__FAQ_BACK__' + conditionKey };
+            }
+            return m;
+          }));
+        }, 200);
+      };
+      col.appendChild(btn);
+    });
+    // Schedule + Back + Main Menu always visible below FAQ list
+    var bottomRow = document.createElement('div');
+    bottomRow.className = 'acme-menu-row';
+    bottomRow.style.marginTop = '4px';
+    bottomRow.style.borderTop = '1px solid rgba(13,79,92,0.1)';
+    bottomRow.style.paddingTop = '6px';
+    var schedBtn = document.createElement('button');
+    schedBtn.className = 'acme-btn gold';
+    schedBtn.textContent = '📅 Schedule';
+    schedBtn.onclick = function(){ handleUserInput('__SCHEDULE__'); };
+    var backBtn = document.createElement('button');
+    backBtn.className = 'acme-btn';
+    backBtn.textContent = '⬅ Pain & Injury';
+    backBtn.onclick = function(){ handleUserInput('__PAIN_MENU__'); };
+    var homeBtn = document.createElement('button');
+    homeBtn.className = 'acme-btn';
+    homeBtn.textContent = '🏠 Main Menu';
+    homeBtn.onclick = function(){ handleUserInput('__MAIN_MENU__'); };
+    bottomRow.appendChild(schedBtn);
+    bottomRow.appendChild(backBtn);
+    bottomRow.appendChild(homeBtn);
+    col.appendChild(bottomRow);
+    menuWrap.appendChild(col);
+  }
+
+  // ── Condition entry point ─────────────────────────────────────────────────────
+  function enterCondition(key) {
+    var cond = KB[key];
+    if (!cond) return;
+    currentCondition = key;
+    addMsg(cond.intro, 'bot');
+    setTimeout(function(){ renderFAQMenu(cond.faqs, key); }, 100);
+  }
+
+  // ── Lead capture — single message, parse reply ────────────────────────────────
+  var leadCaptureStep = 0; // 0=waiting for info, 1=waiting for day, 2=done
+  var LEAD_MSG_1 = "I'd be happy to help you schedule! To get things set up, please share:\n\n• Your name\n• Phone number and/or email\n• Reason for your visit\n\nFeel free to put it all in one message.";
+  var LEAD_MSG_2 = "Perfect, almost done! What's your preferred day? (e.g. Monday, weekdays, Saturday)";
+
+  function startLeadCapture() {
+    leadCaptureMode = true;
+    leadCaptureStep = 0;
+    leadData = {};
+    clearMenu();
+    addMsg(LEAD_MSG_1, 'bot');
+    renderMenu([{ label: '🏠 Main Menu', value: '__MAIN_MENU__' }]);
+  }
+
+  function handleLeadStep(text) {
+    if (leadCaptureStep === 0) {
+      leadData.contactInfo = text;
+      leadCaptureStep = 1;
+      addMsg(LEAD_MSG_2, 'bot');
+      renderMenu([{ label: '🏠 Main Menu', value: '__MAIN_MENU__' }]);
+    } else if (leadCaptureStep === 1) {
+      leadData.preferredDay = text;
+      leadCaptureMode = false;
+      leadCaptureStep = 0;
+      showThinking();
+      fetch(WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'appointment_request',
+          sessionId: SESSION_ID,
+          contactInfo: leadData.contactInfo,
+          preferredDay: leadData.preferredDay,
+          condition: currentCondition || 'general',
+          source: 'website-chatbot'
+        })
+      }).catch(function(){});
+      setTimeout(function(){
+        removeThinking();
+        addMsg("✅ Got it — thank you! Our team will reach out shortly to confirm your appointment.\n\nIs there anything else I can help you with?", 'bot');
+        renderMenu([{ label: '🏠 Main Menu', value: '__MAIN_MENU__' }]);
+      }, 1200);
+    }
+  }
+
+  // ── AI fallback ───────────────────────────────────────────────────────────────
+  var SYSTEM_PROMPT = "You are the knowledgeable front-desk wellness concierge for ACME Chiropractic & Wellness. Help visitors understand whether the practice can help their condition, answer questions warmly and clearly, and guide them toward scheduling. NEVER diagnose or give medical advice. Be concise (3-5 sentences). NEVER quote prices. For insurance questions, say the practice works with most major plans and invite them to call or verify at scheduling. Services: Back Pain (spinal adjustments, decompression), Neck Pain (cervical adjustments, soft tissue therapy), Auto Accident/Whiplash, Headaches (tension, cervicogenic), Neuropathy (Cold Laser Therapy, spinal decompression), Family & Pediatric Chiropractic, Prenatal Chiropractic (Webster Technique), Shockwave Therapy, Hydromassage, Kinesiology Taping, Nutrition, Personal Injury documentation. Always end with an offer to help them schedule a consultation.";
+
+  function callAI(userMessage) {
+    showThinking();
+    fetch(WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'chat', sessionId: SESSION_ID,
+        userMessage: userMessage,
+        systemPrompt: SYSTEM_PROMPT,
+        source: 'website-chatbot'
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      removeThinking();
+      var reply = (data && (data.output || data.text || data.reply || data.response)) ||
+        "Thanks for reaching out! Our team would love to help — use the button below to schedule a consultation or feel free to keep asking questions.";
+      addMsg(reply, 'bot');
+      renderMenu(AFTER_FAQ_MENU.map(function(m){
+        if (m.value === '__FAQ_MORE__') return { label: '❓ Ask Another Question', value: '__MAIN_MENU__' };
+        return m;
+      }));
+    })
+    .catch(function(){
+      removeThinking();
+      addMsg("Thanks for your question! Our team is here to help. Feel free to ask anything or click below to schedule.", 'bot');
+      renderMenu([
+        { label: '📅 Schedule Consultation', value: '__SCHEDULE__', gold: true },
+        { label: '🏠 Main Menu', value: '__MAIN_MENU__' }
+      ]);
+    });
+  }
+
+  // ── NLP detection ────────────────────────────────────────────────────────────
+  function detectCondition(text) {
+    var lower = text.toLowerCase();
+    for (var i = 0; i < NLP_MAP.length; i++) {
+      var entry = NLP_MAP[i];
+      for (var j = 0; j < entry.terms.length; j++) {
+        if (lower.indexOf(entry.terms[j]) !== -1) return entry.key;
+      }
+    }
+    return null;
+  }
+
+  // ── Main input handler ────────────────────────────────────────────────────────
+  function handleUserInput(text) {
+    text = text.trim();
+    if (!text) return;
+
+    // ── Special tokens ──────────────────────────────────────────────────────────
+    if (text === '__MAIN_MENU__') {
+      leadCaptureMode = false;
+      leadCaptureStep = 0;
+      leadData = {};
+      clearMenu();
+      addMsg("What else can I help you with today?", 'bot');
+      renderMenu(MAIN_MENU);
+      return;
+    }
+    if (text === '__PAIN_MENU__') {
+      clearMenu();
+      addMsg("What type of pain or injury are you dealing with?", 'bot');
+      renderMenu(PAIN_SUBMENU);
+      return;
+    }
+    if (text.indexOf('__CONDITION__') === 0) {
+      var key = text.replace('__CONDITION__', '');
+      enterCondition(key);
+      return;
+    }
+    if (text.indexOf('__FAQ_BACK__') === 0) {
+      var condKey = text.replace('__FAQ_BACK__', '');
+      var cond = KB[condKey];
+      addMsg("Of course! Here are more questions about " + (cond ? cond.label : 'this condition') + ":", 'bot');
+      setTimeout(function(){ renderFAQMenu(KB[condKey].faqs, condKey); }, 100);
+      return;
+    }
+    if (text === '__SCHEDULE__') {
+      startLeadCapture();
+      return;
+    }
+    if (text === '__NEW_PATIENT__') {
+      clearMenu();
+      addMsg("Welcome! We're glad you're considering ACME Chiropractic & Wellness.\n\nAs a new patient, your first visit includes a full consultation, health history review, and physical examination. The doctor will take time to understand your concerns and explain any recommended treatment options before anything begins.\n\nWhat brings you in — is there a specific condition or area you'd like help with?", 'bot');
+      renderMenu([
+        { label: '🤕 I have pain or an injury', value: '__PAIN_MENU__' },
+        { label: '📅 Schedule My First Visit',   value: '__SCHEDULE__', gold: true },
+        { label: '🏠 Main Menu',                 value: '__MAIN_MENU__' },
+      ]);
+      return;
+    }
+    if (text === '__FAMILY__') {
+      clearMenu();
+      addMsg("We love serving families! Chiropractic care is safe and beneficial at every age — from newborns to grandparents.\n\nWhat would you like to learn more about?", 'bot');
+      renderMenu([
+        { label: '👶 Pediatric / Kids',       value: '__FAMILY_PEDIATRIC__' },
+        { label: '🤰 Prenatal / Pregnancy',    value: '__FAMILY_PRENATAL__' },
+        { label: '📅 Schedule Appointment',   value: '__SCHEDULE__', gold: true },
+        { label: '🏠 Main Menu',               value: '__MAIN_MENU__' },
+      ]);
+      return;
+    }
+    if (text === '__FAMILY_PEDIATRIC__') {
+      clearMenu();
+      addMsg("Pediatric chiropractic care uses gentle, age-appropriate techniques safe for children of all ages — including newborns and toddlers.\n\nKids can benefit from chiropractic care for things like colic, ear infections, posture issues, sports injuries, and general wellness as they grow. The adjustments are very light and tailored to each child's size and needs.\n\nWould you like to schedule a visit for your child?", 'bot');
+      renderMenu([
+        { label: '📅 Schedule for My Child',  value: '__SCHEDULE__', gold: true },
+        { label: '⬅ Back to Family & Kids',   value: '__FAMILY__' },
+        { label: '🏠 Main Menu',               value: '__MAIN_MENU__' },
+      ]);
+      return;
+    }
+    if (text === '__FAMILY_PRENATAL__') {
+      clearMenu();
+      addMsg("Prenatal chiropractic care supports comfort and wellness throughout pregnancy. We use the Webster Technique — a gentle, safe approach specifically designed for pregnant patients.\n\nMany expectant mothers find relief from back pain, round ligament pain, and hip discomfort. Webster Technique is also known for supporting optimal fetal positioning as the pregnancy progresses.\n\nWould you like to schedule a prenatal visit?", 'bot');
+      renderMenu([
+        { label: '📅 Schedule Prenatal Visit', value: '__SCHEDULE__', gold: true },
+        { label: '⬅ Back to Family & Kids',    value: '__FAMILY__' },
+        { label: '🏠 Main Menu',                value: '__MAIN_MENU__' },
+      ]);
+      return;
+    }
+    if (text === '__INSURANCE__') {
+      clearMenu();
+      addMsg("Great question! We work with most major insurance plans, and our team will verify your benefits before your first visit so you know exactly what to expect.\n\nWe also work with personal injury and auto accident cases, and we're happy to walk you through your options.\n\nWould you like to schedule so we can confirm your coverage directly?", 'bot');
+      renderMenu([
+        { label: '📅 Schedule & Verify Coverage', value: '__SCHEDULE__', gold: true },
+        { label: '🏠 Main Menu',                  value: '__MAIN_MENU__' },
+      ]);
+      return;
+    }
+    if (text === '__OTHER_PAIN__') {
+      clearMenu();
+      addMsg("No problem — just tell me what's going on in your own words. Describe where it hurts, what it feels like, or how it started, and I'll do my best to point you in the right direction.", 'bot');
+      return;
+    }
+
+    // ── Typed message: show in chat ─────────────────────────────────────────────
+    addMsg(text, 'user');
+    input.value = '';
+    clearMenu();
+
+    if (leadCaptureMode) { handleLeadStep(text); return; }
+
+    // Schedule intent
+    var schedKw = ['schedule','appointment','book','reserve','come in','set up a visit','make an appointment'];
+    var lower = text.toLowerCase();
+    if (schedKw.some(function(k){ return lower.indexOf(k) !== -1; })) {
+      startLeadCapture();
+      return;
+    }
+
+    // NLP condition detection
+    var detected = detectCondition(text);
+    if (detected) {
+      enterCondition(detected);
+      return;
+    }
+
+    // Fallback to AI
+    callAI(text);
+  }
+
+  // ── Events ───────────────────────────────────────────────────────────────────
+  bubble.onclick = function() {
+    win.classList.toggle('open');
+    if (win.classList.contains('open') && messages.children.length === 0) {
+      addMsg(GREETING, 'bot');
+      renderMenu(MAIN_MENU);
+    }
+    scrollBottom();
+  };
+
+  document.getElementById('acme-close').onclick = function() { win.classList.remove('open'); };
+  document.getElementById('acme-send').onclick = function() { handleUserInput(input.value); };
+  input.addEventListener('keydown', function(e){ if (e.key === 'Enter') handleUserInput(input.value); });
+
+})();
+</script></body></html>
