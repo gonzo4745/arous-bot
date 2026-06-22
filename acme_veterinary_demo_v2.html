@@ -1,0 +1,512 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>ACME Veterinary Hospital</title><style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Georgia',serif;background:#F4F7F4;min-height:100vh;display:flex;flex-direction:column;}
+
+/* NAV */
+.site-nav{background:#2C5F3F;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;}
+.site-logo{color:#fff;font-size:18px;font-weight:700;letter-spacing:-0.3px;}
+.site-logo span{color:#8FCA9A;}
+.site-nav-links{display:flex;gap:24px;}
+.site-nav-links a{color:rgba(255,255,255,0.72);text-decoration:none;font-size:13px;font-family:Arial,sans-serif;}
+.site-nav-links a:hover{color:#fff;}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#2C5F3F 0%,#1E4530 55%,#152E22 100%);padding:48px 28px 52px;text-align:center;color:#fff;}
+.hero-tag{display:inline-block;background:rgba(143,202,154,0.18);border:1px solid rgba(143,202,154,0.45);color:#8FCA9A;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 13px;border-radius:20px;margin-bottom:16px;}
+.hero h1{font-size:36px;font-weight:700;line-height:1.18;margin-bottom:14px;max-width:600px;margin-left:auto;margin-right:auto;}
+.hero h1 em{color:#8FCA9A;font-style:normal;}
+.hero p{font-size:15px;color:rgba(255,255,255,0.72);max-width:460px;margin:0 auto 26px;font-family:Arial,sans-serif;line-height:1.55;}
+.hero-badges{display:flex;gap:20px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;}
+.hero-badge{display:flex;align-items:center;gap:6px;font-family:Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.65);}
+.hero-badge span{font-size:15px;}
+.hero-cta{display:inline-block;background:#8FCA9A;color:#152E22;font-family:Arial,sans-serif;font-weight:700;font-size:14px;padding:14px 34px;border-radius:30px;text-decoration:none;transition:background .18s;}
+.hero-cta:hover{background:#7ab887;}
+
+/* SERVICE CARDS */
+.services{padding:32px 20px 36px;max-width:1100px;margin:0 auto;width:100%;}
+.section-eyebrow{text-align:center;color:#2C5F3F;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:8px;}
+.services h2{text-align:center;font-size:24px;color:#1E4530;margin-bottom:20px;}
+.services-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.service-card{background:#fff;border:1px solid rgba(44,95,63,0.12);border-radius:14px;padding:20px 14px 16px;text-align:center;transition:box-shadow .2s;}
+.service-card:hover{box-shadow:0 4px 20px rgba(44,95,63,0.12);}
+.service-icon{font-size:28px;margin-bottom:8px;}
+.service-card h3{font-size:13px;color:#1E4530;font-family:Arial,sans-serif;font-weight:700;margin-bottom:5px;}
+.service-card p{font-size:11px;color:#6B7A6B;font-family:Arial,sans-serif;line-height:1.4;}
+
+/* WELLNESS PROMO BAND */
+.promo-band{background:linear-gradient(135deg,#2C5F3F 0%,#152E22 100%);padding:40px 24px;text-align:center;color:#fff;margin:0;}
+.promo-band .eyebrow{color:#8FCA9A;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:10px;}
+.promo-band h2{font-size:26px;font-weight:700;margin-bottom:10px;max-width:560px;margin-left:auto;margin-right:auto;}
+.promo-band h2 em{color:#8FCA9A;font-style:normal;}
+.promo-band p{font-size:14px;color:rgba(255,255,255,0.72);max-width:520px;margin:0 auto 24px;font-family:Arial,sans-serif;line-height:1.55;}
+.promo-perks{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:26px;}
+.promo-perk{font-family:Arial,sans-serif;font-size:13px;color:rgba(255,255,255,0.85);display:flex;align-items:center;gap:6px;}
+.promo-perk::before{content:"✓";color:#8FCA9A;font-weight:700;}
+.promo-cta{display:inline-block;background:#8FCA9A;color:#152E22;font-family:Arial,sans-serif;font-weight:700;font-size:14px;padding:13px 32px;border-radius:30px;text-decoration:none;}
+
+/* FOOTER */
+.site-footer{background:#1E4530;padding:18px 40px;text-align:center;color:rgba(255,255,255,0.45);font-family:Arial,sans-serif;font-size:12px;margin-top:auto;}
+
+@media(max-width:600px){
+  .hero h1{font-size:26px;}
+  .hero{padding:32px 16px 38px;}
+  .services{padding:24px 12px 28px;}
+  .site-nav-links{display:none;}
+  .services-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .service-card h3{font-size:12px;}
+  .service-icon{font-size:22px;}
+  .promo-perks{gap:14px;}
+  .promo-band{padding:30px 16px;}
+  .promo-band h2{font-size:20px;}
+}
+</style></head><body>
+
+<nav class="site-nav">
+  <div class="site-logo">ACME <span>Veterinary Hospital</span></div>
+  <div class="site-nav-links">
+    <a href="#">Services</a>
+    <a href="#">Wellness Plans</a>
+    <a href="#">New Patients</a>
+    <a href="#">Urgent Care</a>
+    <a href="#">Contact</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">Compassionate Care for Every Pet</div>
+  <h1>Your Pet Deserves<br/><em>the Very Best.</em></h1>
+  <p>From routine wellness visits to urgent care, our team is here to keep your dog, cat, or companion animal healthy and happy.</p>
+  <div class="hero-badges">
+    <div class="hero-badge"><span>🐾</span> Dogs & Cats Welcome</div>
+    <div class="hero-badge"><span>⭐</span> Fear-Free Certified</div>
+    <div class="hero-badge"><span>📅</span> Same-Day Sick Visits</div>
+  </div>
+  <a href="#" class="hero-cta">Request an Appointment</a>
+</div>
+
+<section class="services">
+  <p class="section-eyebrow">What We Offer</p>
+  <h2>Care for Every Stage of Life</h2>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">🩺</div>
+      <h3>Wellness Care</h3>
+      <p>Annual exams, health screenings, and preventive care for all life stages.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">💉</div>
+      <h3>Vaccinations</h3>
+      <p>Core and lifestyle vaccines for puppies, kittens, and adult pets.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🔬</div>
+      <h3>Diagnostics</h3>
+      <p>In-house lab work, digital X-ray, and ultrasound imaging.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">🚨</div>
+      <h3>Urgent Care</h3>
+      <p>Same-day sick visits for pets who cannot wait for a routine appointment.</p>
+    </div>
+  </div>
+</section>
+
+<div class="promo-band">
+  <p class="eyebrow">Wellness Plans</p>
+  <h2>Prevention Is the <em>Best Medicine.</em></h2>
+  <p>Our annual wellness plans make routine care affordable and easy — so your pet stays healthy year-round and you never miss an important visit.</p>
+  <div class="promo-perks">
+    <div class="promo-perk">Annual wellness exam</div>
+    <div class="promo-perk">Core vaccinations</div>
+    <div class="promo-perk">Parasite screening</div>
+    <div class="promo-perk">Dental health check</div>
+    <div class="promo-perk">Priority scheduling</div>
+  </div>
+  <a href="#" class="promo-cta">Learn About Wellness Plans</a>
+</div>
+
+<footer class="site-footer">
+  &copy; 2025 ACME Veterinary Hospital &nbsp;·&nbsp; All rights reserved &nbsp;·&nbsp; <em>Demo Page</em>
+</footer>
+
+<script>
+(function () {
+
+  var GREETING = "Hi there! Welcome to ACME Veterinary Hospital.\n\nI am here to help you find answers, learn about our services, or get your pet scheduled for a visit.\n\nWhat can I help you with today?";
+
+  // ── CSS ───────────────────────────────────────────────────────────────────
+  var style = document.createElement('style');
+  style.textContent = `
+    #vet-bubble{position:fixed;bottom:28px;right:28px;width:68px;height:68px;border:none;background:transparent;cursor:pointer;z-index:999999;transition:transform .2s ease;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+    #vet-bubble:hover{transform:scale(1.08);}
+    #vet-bubble-inner{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#2C5F3F 0%,#8FCA9A 100%);box-shadow:0 4px 18px rgba(44,95,63,0.45);display:flex;align-items:center;justify-content:center;animation:vetPulse 2.5s ease-in-out infinite;}
+    #vet-bubble-label{position:fixed;bottom:10px;right:28px;font-size:10px;color:#2C5F3F;font-family:Arial,sans-serif;font-weight:600;text-align:center;width:68px;z-index:999999;letter-spacing:0.3px;}
+    #vet-window{display:none;position:fixed;bottom:110px;right:28px;width:370px;height:580px;background:#F8FBF8;border-radius:18px;box-shadow:0 8px 40px rgba(44,95,63,0.18);z-index:999998;flex-direction:column;overflow:hidden;font-family:Arial,sans-serif;border:1px solid rgba(44,95,63,0.12);}
+    #vet-window.open{display:flex;}
+    #vet-header{background:linear-gradient(135deg,#2C5F3F 0%,#1E4530 100%);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    #vet-header-info{display:flex;align-items:center;gap:10px;}
+    #vet-avatar{width:38px;height:38px;border-radius:50%;background:rgba(143,202,154,0.25);border:2px solid #8FCA9A;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+    #vet-name{font-size:14px;font-weight:700;color:#8FCA9A;display:block;}
+    #vet-sub{font-size:11px;color:rgba(255,255,255,0.6);display:block;}
+    #vet-close{background:none;border:none;color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;line-height:1;padding:0;transition:color .2s;}
+    #vet-close:hover{color:#fff;}
+    #vet-messages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;}
+    #vet-messages::-webkit-scrollbar{width:4px;}
+    #vet-messages::-webkit-scrollbar-thumb{background:#8FCA9A;border-radius:4px;}
+    .vet-msg{max-width:84%;padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.55;word-wrap:break-word;}
+    .vet-msg.bot{background:#fff;color:#2C3E2C;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(44,95,63,0.08);border:1px solid rgba(44,95,63,0.08);}
+    .vet-msg.user{background:linear-gradient(135deg,#2C5F3F,#1E4530);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+    #vet-menu-wrap{padding:4px 14px 10px;display:flex;flex-direction:column;gap:5px;flex-shrink:0;max-height:210px;overflow-y:auto;}
+    #vet-menu-wrap::-webkit-scrollbar{width:3px;}
+    #vet-menu-wrap::-webkit-scrollbar-thumb{background:#8FCA9A;border-radius:3px;}
+    .vet-menu-row{display:flex;gap:6px;flex-wrap:wrap;}
+    .vet-menu-col{display:flex;flex-direction:column;gap:5px;width:100%;}
+    .vet-btn{background:#fff;border:1.5px solid #2C5F3F;color:#2C5F3F;border-radius:20px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;white-space:normal;text-align:left;font-family:Arial,sans-serif;line-height:1.3;}
+    .vet-btn:hover{background:#2C5F3F;color:#fff;}
+    .vet-btn.green{border-color:#8FCA9A;color:#1E4530;}
+    .vet-btn.green:hover{background:#8FCA9A;color:#1E4530;}
+    .vet-btn.urgent{border-color:#C0392B;color:#C0392B;}
+    .vet-btn.urgent:hover{background:#C0392B;color:#fff;}
+    #vet-input-wrap{display:flex;gap:8px;padding:10px 14px 10px;background:#F8FBF8;border-top:1px solid rgba(44,95,63,0.1);flex-shrink:0;}
+    #vet-call-bar{display:flex;align-items:center;justify-content:center;gap:18px;padding:6px 14px 10px;background:#F8FBF8;flex-shrink:0;border-top:1px solid rgba(44,95,63,0.06);}
+    #vet-call-bar span{font-size:11px;color:#999;font-family:Arial,sans-serif;}
+    .vet-call-link{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;font-family:Arial,sans-serif;color:#2C5F3F;text-decoration:none;transition:opacity .15s;}
+    .vet-call-link:hover{opacity:0.7;}
+    #vet-input{flex:1;border:1.5px solid rgba(44,95,63,0.2);border-radius:22px;padding:9px 14px;font-size:13px;outline:none;background:#fff;color:#2C3E2C;font-family:Arial,sans-serif;transition:border-color .2s;}
+    #vet-input:focus{border-color:#2C5F3F;}
+    #vet-send{background:linear-gradient(135deg,#2C5F3F,#1E4530);border:none;border-radius:50%;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s;flex-shrink:0;}
+    #vet-send:hover{transform:scale(1.08);}
+    @keyframes vetPulse{0%,100%{box-shadow:0 4px 18px rgba(44,95,63,0.45)}50%{box-shadow:0 4px 26px rgba(143,202,154,0.7)}}
+    @media(max-width:420px){#vet-window{width:calc(100vw - 20px);right:10px;bottom:100px;height:72vh;}#vet-bubble{right:16px;bottom:20px;}#vet-bubble-label{right:16px;}}
+  `;
+  document.head.appendChild(style);
+
+  // ── DOM ───────────────────────────────────────────────────────────────────
+  var bubble = document.createElement('button');
+  bubble.id = 'vet-bubble';
+  bubble.setAttribute('aria-label','Open chat');
+  bubble.innerHTML = '<div id="vet-bubble-inner"><span style="font-size:28px;line-height:1">🐾</span></div>';
+  document.body.appendChild(bubble);
+
+  var blabel = document.createElement('div');
+  blabel.id = 'vet-bubble-label';
+  blabel.textContent = 'Ask Us';
+  document.body.appendChild(blabel);
+
+  var win = document.createElement('div');
+  win.id = 'vet-window';
+  win.setAttribute('role','dialog');
+  win.setAttribute('aria-label','ACME Veterinary Chat');
+  win.innerHTML = `
+    <div id="vet-header">
+      <div id="vet-header-info">
+        <div id="vet-avatar">🐾</div>
+        <div><span id="vet-name">ACME Veterinary</span><span id="vet-sub">Pet Care Concierge · Online</span></div>
+      </div>
+      <button id="vet-close" aria-label="Close chat">&times;</button>
+    </div>
+    <div id="vet-messages"></div>
+    <div id="vet-menu-wrap"></div>
+    <div id="vet-input-wrap">
+      <input id="vet-input" type="text" placeholder="Type your question..." autocomplete="off"/>
+      <button id="vet-send" aria-label="Send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+    <div id="vet-call-bar">
+      <span>Call or text us:</span>
+      <a class="vet-call-link" href="tel:5551234567">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 5.53 5.53l.87-.87a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call (555) 123-4567
+      </a>
+      <a class="vet-call-link" href="sms:5551234567">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Text Us
+      </a>
+    </div>`;
+  document.body.appendChild(win);
+
+  var messages = document.getElementById('vet-messages');
+  var menuWrap = document.getElementById('vet-menu-wrap');
+  var input    = document.getElementById('vet-input');
+
+  // ── State ─────────────────────────────────────────────────────────────────
+  var leadCaptureMode = false;
+
+  // ── Menus ─────────────────────────────────────────────────────────────────
+  var MAIN_MENU = [
+    { label: '🤒 Sick or Injured Pet',    value: '__SICK__' },
+    { label: '💉 Vaccines & Wellness',    value: '__WELLNESS__' },
+    { label: '📅 Schedule Appointment',   value: '__SCHEDULE__', green: true },
+    { label: '💬 Ask a Question',         value: '__ASK__' },
+  ];
+
+  var SICK_SUBMENU = [
+    { label: '🤢 Vomiting / Diarrhea',   value: '__SICK__vomit' },
+    { label: '🍽️ Not Eating',             value: '__SICK__noteat' },
+    { label: '🦵 Limping / Injury',       value: '__SICK__limp' },
+    { label: '🐛 Itching / Skin Issue',   value: '__SICK__skin' },
+    { label: '🚨 Emergency Concern',      value: '__EMERGENCY__' },
+    { label: '❓ Not Sure',              value: '__SICK__notsure' },
+  ];
+
+  var WELLNESS_SUBMENU = [
+    { label: '🐶🐱 Puppy / Kitten Vaccines', value: '__WELL__pupkitten' },
+    { label: '🩺 Adult Wellness Exam',        value: '__WELL__adult' },
+    { label: '🦴 Senior Pet Care',            value: '__WELL__senior' },
+    { label: '🛡️ Parasite Prevention',        value: '__WELL__parasite' },
+  ];
+
+  var AFTER_SICK_MENU = [
+    { label: '📅 Schedule Appointment',   value: '__SCHEDULE__', green: true },
+    { label: '📞 Call Clinic',            value: '__CALL__' },
+    { label: '💬 Ask Another Question',   value: '__ASK__' },
+    { label: '🏠 Main Menu',              value: '__MAIN_MENU__' },
+  ];
+
+  var AFTER_WELL_MENU = [
+    { label: '📅 Schedule Wellness Visit', value: '__SCHEDULE__', green: true },
+    { label: '💬 Ask Another Question',    value: '__ASK__' },
+    { label: '🏠 Main Menu',               value: '__MAIN_MENU__' },
+  ];
+
+  var EMERGENCY_MENU = [
+    { label: '📞 Call Clinic',            value: '__CALL__',     urgent: true },
+    { label: '🏥 Emergency Hospital',     value: '__EMERG_HOSP__', urgent: true },
+    { label: '📅 Schedule Follow-Up',     value: '__SCHEDULE__' },
+  ];
+
+  var SCHED_YES_NO = [
+    { label: '✅ Yes, schedule now',      value: '__SCHED_COLLECT__', green: true },
+    { label: '❌ No thanks',              value: '__SCHED_NO__' },
+  ];
+
+  // ── Sick pet responses ────────────────────────────────────────────────────
+  var SICK_RESPONSES = {
+    vomit:   "Vomiting or diarrhea in pets can range from mild to serious depending on frequency, duration, and other symptoms your pet may be showing.\n\nIf symptoms are persistent, there is blood present, or your pet seems lethargic or in pain, a veterinary evaluation is recommended sooner rather than later.",
+    noteat:  "A pet that is not eating can be a sign of many things — some minor, others that benefit from prompt attention.\n\nIf your pet has gone more than 24 hours without eating, or is also showing other symptoms such as lethargy, vomiting, or unusual behavior, we recommend scheduling a visit.",
+    limp:    "Limping or signs of injury should be evaluated by a veterinarian, especially if your pet is bearing no weight on the limb, the area is swollen, or the onset was sudden.\n\nOur team can help assess the severity and determine the appropriate next step.",
+    skin:    "Itching, hair loss, redness, or skin changes can have a variety of causes including allergies, parasites, or infections.\n\nA wellness visit allows the veterinarian to examine the area and recommend an appropriate care plan.",
+    notsure: "That is okay — if something seems off with your pet and you are not sure what it is, trust your instincts. Pet owners often notice subtle changes before symptoms become obvious.\n\nWe are happy to see your pet and help determine what is going on.",
+  };
+
+  // ── Wellness responses ────────────────────────────────────────────────────
+  var WELL_RESPONSES = {
+    pupkitten: "Puppies and kittens need a series of vaccines during their first few months to build protection against common and serious diseases. These are typically given in a series of visits spaced a few weeks apart.\n\nWe also recommend a full nose-to-tail exam at each visit to make sure your new pet is growing and developing well.",
+    adult:     "An annual wellness exam is one of the most important things you can do for your pet's long-term health. It allows our veterinarians to catch early signs of illness, update vaccines, and address any concerns before they become bigger issues.\n\nRegular wellness visits help keep your pet healthy and allow our team to identify potential concerns early.",
+    senior:    "Senior pets — generally dogs over 7 and cats over 10 — benefit from more frequent wellness visits, often every six months. Older pets are more prone to conditions such as arthritis, dental disease, kidney issues, and thyroid problems.\n\nEarly detection through regular check-ups can make a meaningful difference in quality of life.",
+    parasite:  "Year-round parasite prevention is recommended for most pets. This includes protection against fleas, ticks, heartworm, and intestinal parasites.\n\nOur veterinarians can recommend the right products based on your pet's species, size, lifestyle, and local risk factors.",
+  };
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function scrollBottom() { setTimeout(function(){ messages.scrollTop = messages.scrollHeight; }, 60); }
+
+  function addMsg(text, who) {
+    var d = document.createElement('div');
+    d.className = 'vet-msg ' + who;
+    d.innerHTML = text.replace(/\n/g, '<br>');
+    messages.appendChild(d);
+    scrollBottom();
+    return d;
+  }
+
+  function clearMenu() { menuWrap.innerHTML = ''; }
+
+  function renderMenu(items) {
+    clearMenu();
+    if (!items || !items.length) return;
+    var row = document.createElement('div');
+    row.className = 'vet-menu-row';
+    items.forEach(function(item) {
+      var btn = document.createElement('button');
+      btn.className = 'vet-btn' + (item.green ? ' green' : item.urgent ? ' urgent' : '');
+      btn.textContent = item.label;
+      btn.onclick = function(){ handleUserInput(item.value); };
+      row.appendChild(btn);
+    });
+    menuWrap.appendChild(row);
+  }
+
+  function renderColMenu(items) {
+    clearMenu();
+    var col = document.createElement('div');
+    col.className = 'vet-menu-col';
+    items.forEach(function(item) {
+      var btn = document.createElement('button');
+      btn.className = 'vet-btn' + (item.green ? ' green' : item.urgent ? ' urgent' : '');
+      btn.textContent = item.label;
+      btn.onclick = function(){ handleUserInput(item.value); };
+      col.appendChild(btn);
+    });
+    menuWrap.appendChild(col);
+  }
+
+  // ── Lead capture ──────────────────────────────────────────────────────────
+  function startLeadCapture() {
+    leadCaptureMode = true;
+    clearMenu();
+    addMsg("Please send your name, your pet's name, dog/cat/other, your phone number or email, and your preferred day for an appointment — all in one message.", 'bot');
+    renderMenu([{ label: '🏠 Main Menu', value: '__MAIN_MENU__' }]);
+  }
+
+  function handleLead() {
+    leadCaptureMode = false;
+    addMsg("Thank you! A member of our team will contact you to confirm appointment availability.", 'bot');
+    renderMenu([{ label: '🏠 Main Menu', value: '__MAIN_MENU__' }]);
+  }
+
+  // ── NLP keyword routing ───────────────────────────────────────────────────
+  var NLP_MAP = [
+    { key: '__EMERGENCY__',  terms: ['cannot breathe','can\'t breathe','not breathing','seizure','collapsed','collapse','poisoning','ate poison','hit by car','hit by a car','unresponsive','not responsive','emergency','bleeding badly','unconscious'] },
+    { key: '__SICK__',       terms: ['vomiting','vomit','throwing up','diarrhea','sick','not eating','won\'t eat','limping','limp','itching','skin issue','rash','swollen','lethargic','lethargy','not well','not acting right','something wrong'] },
+    { key: '__WELLNESS__',   terms: ['vaccine','vaccines','shots','wellness','annual exam','check up','checkup','physical','booster','rabies','heartworm','flea','tick','parasite'] },
+    { key: '__SCHEDULE__',   terms: ['schedule','appointment','book','come in','visit','set up'] },
+  ];
+
+  function detectIntent(text) {
+    var lower = text.toLowerCase();
+    for (var i = 0; i < NLP_MAP.length; i++) {
+      var entry = NLP_MAP[i];
+      for (var j = 0; j < entry.terms.length; j++) {
+        if (lower.indexOf(entry.terms[j]) !== -1) return entry.key;
+      }
+    }
+    return null;
+  }
+
+  // ── Main handler ──────────────────────────────────────────────────────────
+  function handleUserInput(text) {
+    text = text.trim();
+    if (!text) return;
+
+    if (text === '__MAIN_MENU__') {
+      leadCaptureMode = false;
+      clearMenu();
+      addMsg("What can I help you with?", 'bot');
+      renderMenu(MAIN_MENU);
+      return;
+    }
+
+    if (text === '__SICK__') {
+      clearMenu();
+      addMsg("I am sorry to hear your pet is not feeling well. What best describes your concern?", 'bot');
+      renderColMenu(SICK_SUBMENU);
+      return;
+    }
+
+    if (text === '__WELLNESS__') {
+      clearMenu();
+      addMsg("Regular wellness care is one of the best investments you can make in your pet's long-term health. What can I help you with?", 'bot');
+      renderColMenu(WELLNESS_SUBMENU);
+      return;
+    }
+
+    if (text === '__EMERGENCY__') {
+      clearMenu();
+      addMsg("If your pet is experiencing a medical emergency, please contact the clinic immediately or seek emergency veterinary care.\n\nThis concierge cannot provide emergency medical advice.", 'bot');
+      renderMenu(EMERGENCY_MENU);
+      return;
+    }
+
+    if (text.indexOf('__SICK__') === 0) {
+      var key = text.replace('__SICK__', '');
+      var resp = SICK_RESPONSES[key];
+      if (resp) {
+        addMsg(resp, 'bot');
+        setTimeout(function(){
+          addMsg("Would you like to schedule an appointment?", 'bot');
+          renderMenu(SCHED_YES_NO);
+        }, 300);
+      }
+      return;
+    }
+
+    if (text.indexOf('__WELL__') === 0) {
+      var wkey = text.replace('__WELL__', '');
+      var wresp = WELL_RESPONSES[wkey];
+      if (wresp) {
+        addMsg(wresp, 'bot');
+        setTimeout(function(){
+          addMsg("Would you like to schedule a wellness visit?", 'bot');
+          renderMenu(SCHED_YES_NO);
+        }, 300);
+      }
+      return;
+    }
+
+    if (text === '__SCHEDULE__' || text === '__SCHED_COLLECT__') {
+      startLeadCapture();
+      return;
+    }
+
+    if (text === '__SCHED_NO__') {
+      clearMenu();
+      addMsg("No problem at all. Is there anything else I can help you with?", 'bot');
+      renderMenu(MAIN_MENU);
+      return;
+    }
+
+    if (text === '__CALL__') {
+      clearMenu();
+      addMsg("Please give us a call and our team will be happy to help.\n\n📞 (555) 123-4567\n\nOur phones are answered during regular clinic hours. If this is an after-hours emergency, please contact your nearest emergency veterinary hospital.", 'bot');
+      renderMenu([{ label: '🏠 Main Menu', value: '__MAIN_MENU__' }]);
+      return;
+    }
+
+    if (text === '__EMERG_HOSP__') {
+      clearMenu();
+      addMsg("For after-hours or life-threatening emergencies, please contact an emergency veterinary hospital in your area immediately.\n\nTime is critical in a pet emergency — do not wait for a callback.", 'bot');
+      renderMenu([
+        { label: '📞 Call Our Clinic',   value: '__CALL__' },
+        { label: '🏠 Main Menu',         value: '__MAIN_MENU__' },
+      ]);
+      return;
+    }
+
+    if (text === '__ASK__') {
+      clearMenu();
+      addMsg("Of course! Go ahead and type your question and I will do my best to help.", 'bot');
+      return;
+    }
+
+    // ── Typed message ────────────────────────────────────────────────────────
+    addMsg(text, 'user');
+    input.value = '';
+    clearMenu();
+
+    if (leadCaptureMode) { handleLead(); return; }
+
+    var intent = detectIntent(text);
+    if (intent) {
+      handleUserInput(intent);
+      return;
+    }
+
+    // Fallback
+    addMsg("That is a great question. For the most accurate answer, I recommend speaking directly with our team — they are best equipped to help with your specific situation.\n\nYou can call us, schedule a visit, or ask me something else.", 'bot');
+    renderMenu([
+      { label: '📅 Schedule Appointment', value: '__SCHEDULE__', green: true },
+      { label: '📞 Call Clinic',          value: '__CALL__' },
+      { label: '🏠 Main Menu',            value: '__MAIN_MENU__' },
+    ]);
+  }
+
+  // ── Events ────────────────────────────────────────────────────────────────
+  bubble.onclick = function() {
+    win.classList.toggle('open');
+    if (win.classList.contains('open') && messages.children.length === 0) {
+      addMsg(GREETING, 'bot');
+      renderMenu(MAIN_MENU);
+    }
+    scrollBottom();
+  };
+
+  document.getElementById('vet-close').onclick = function() { win.classList.remove('open'); };
+  document.getElementById('vet-send').onclick = function() { handleUserInput(input.value); };
+  input.addEventListener('keydown', function(e){ if (e.key === 'Enter') handleUserInput(input.value); });
+
+})();
+</script>
+</body></html>
