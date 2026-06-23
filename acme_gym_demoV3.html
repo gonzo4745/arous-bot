@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sean's House of Pain & Recovery</title>
+<style>
+/* ── TOKENS ── */
+:root {
+  --black:   #0c0c0e;
+  --dark:    #131316;
+  --surface: #1c1c22;
+  --border:  #2e2e38;
+  --white:   #f2f1ee;
+  --muted:   #888898;
+  --bolt:    #5b8aff;        /* steel blue — Recovery Lounge accent */
+  --bolt-dim: rgba(91,138,255,0.10);
+  --bolt-glow: rgba(91,138,255,0.22);
+  --red:     #ff4444;
+  --accent:  #5b8aff;
+  --font-display: 'Arial Black', 'Impact', sans-serif;
+  --font-body:    'Arial', system-ui, sans-serif;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body { font-family:var(--font-body); background:var(--black); color:var(--white); overflow-x:hidden; }
+
+/* ── NAV ── */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(10,10,12,0.92); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 40px; height:64px;
+}
+.nav-logo {
+  font-family:var(--font-display); font-size:20px; letter-spacing:3px;
+  text-transform:uppercase; color:var(--white);
+}
+.nav-logo span { color:var(--bolt); }
+.nav-links { display:flex; gap:28px; align-items:center; }
+.nav-links a {
+  color:var(--muted); text-decoration:none; font-size:13px;
+  font-weight:600; letter-spacing:0.5px; text-transform:uppercase;
+  transition:color .2s;
+}
+.nav-links a:hover { color:var(--white); }
+.nav-bolt-btn {
+  background:var(--bolt); color:#fff; border:none;
+  font-family:var(--font-body); font-size:12px; font-weight:800;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:9px 18px; border-radius:4px; cursor:pointer;
+  transition:opacity .2s; white-space:nowrap;
+}
+.nav-bolt-btn:hover { opacity:0.85; }
+.nav-hamburger { display:none; background:none; border:none; cursor:pointer; color:var(--white); font-size:22px; }
+
+/* ── HERO ── */
+.hero {
+  min-height:100vh; display:flex; align-items:center;
+  padding:120px 40px 80px;
+  background:
+    linear-gradient(to bottom, rgba(10,10,12,0.3) 0%, rgba(10,10,12,0.7) 60%, var(--black) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3CradialGradient id='g' cx='60%25' cy='40%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='%235b8aff' stop-opacity='.05'/%3E%3Cstop offset='100%25' stop-color='%230c0c0e' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E");
+  position:relative; overflow:hidden;
+}
+.hero::before {
+  content:''; position:absolute; inset:0;
+  background:repeating-linear-gradient(
+    0deg, transparent, transparent 59px, rgba(255,255,255,0.018) 59px, rgba(255,255,255,0.018) 60px
+  ), repeating-linear-gradient(
+    90deg, transparent, transparent 59px, rgba(255,255,255,0.018) 59px, rgba(255,255,255,0.018) 60px
+  );
+  pointer-events:none;
+}
+.hero-content { max-width:720px; position:relative; z-index:1; }
+.hero-eyebrow {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+  color:var(--muted); font-size:11px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  padding:6px 14px; border-radius:2px; margin-bottom:24px;
+}
+.hero h1 {
+  font-family:var(--font-display); font-size:clamp(52px,8vw,96px);
+  font-weight:900; text-transform:uppercase; line-height:0.92;
+  letter-spacing:-1px; margin-bottom:28px;
+}
+.hero h1 em { color:var(--bolt); font-style:normal; }
+.hero-sub {
+  font-size:16px; color:var(--muted); line-height:1.65;
+  max-width:480px; margin-bottom:40px;
+}
+.hero-ctas { display:flex; gap:14px; flex-wrap:wrap; }
+.btn-primary {
+  background:var(--white); color:var(--black); border:none;
+  font-family:var(--font-body); font-size:13px; font-weight:800;
+  letter-spacing:1.5px; text-transform:uppercase;
+  padding:15px 32px; border-radius:4px; cursor:pointer;
+  transition:opacity .2s;
+}
+.btn-primary:hover { opacity:0.85; }
+.btn-outline {
+  background:transparent; color:var(--white);
+  border:1.5px solid rgba(244,243,240,0.25);
+  font-family:var(--font-body); font-size:13px; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase;
+  padding:15px 32px; border-radius:4px; cursor:pointer;
+  transition:border-color .2s, color .2s;
+}
+.btn-outline:hover { border-color:var(--white); }
+.hero-stats {
+  margin-top:60px; display:flex; gap:48px; flex-wrap:wrap;
+  border-top:1px solid var(--border); padding-top:32px;
+}
+.hero-stat-num {
+  font-family:var(--font-display); font-size:36px; font-weight:900;
+  color:var(--white); letter-spacing:-1px;
+}
+.hero-stat-label { font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+
+/* ── RECOVERY LOUNGE PROMO BAND ── */
+.bolt-band {
+  background:var(--surface); color:var(--white);
+  padding:64px 40px; text-align:center;
+  border-top:3px solid var(--bolt);
+  border-bottom:3px solid var(--bolt);
+}
+.bolt-band-eyebrow {
+  font-size:11px; font-weight:800; letter-spacing:3px;
+  text-transform:uppercase; margin-bottom:14px; color:var(--bolt);
+}
+.bolt-band h2 {
+  font-family:var(--font-display); font-size:clamp(32px,5vw,58px);
+  font-weight:900; text-transform:uppercase; line-height:0.95;
+  margin-bottom:16px; color:var(--white);
+}
+.bolt-band p {
+  font-size:15px; max-width:540px; margin:0 auto 32px;
+  color:var(--muted); line-height:1.6;
+}
+.btn-dark {
+  background:var(--bolt); color:var(--white);
+  border:none; font-family:var(--font-body); font-size:12px;
+  font-weight:800; letter-spacing:1.5px; text-transform:uppercase;
+  padding:14px 30px; border-radius:4px; cursor:pointer;
+  transition:opacity .2s;
+}
+.btn-dark:hover { opacity:0.85; }
+
+/* ── SERVICES SECTION ── */
+.section { padding:80px 40px; max-width:1200px; margin:0 auto; }
+.section-eyebrow {
+  font-size:10px; font-weight:800; letter-spacing:3px;
+  text-transform:uppercase; color:var(--bolt); margin-bottom:12px;
+}
+.section h2 {
+  font-family:var(--font-display); font-size:clamp(28px,4vw,44px);
+  font-weight:900; text-transform:uppercase; margin-bottom:48px;
+}
+.cards-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; }
+.card {
+  background:var(--surface); padding:32px 28px;
+  border-top:2px solid var(--border); transition:border-color .2s;
+  position:relative; overflow:hidden;
+}
+.card:hover { border-top-color:var(--bolt); }
+.card-icon { font-size:28px; margin-bottom:16px; }
+.card h3 { font-size:16px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+.card p { font-size:13px; color:var(--muted); line-height:1.6; }
+
+/* ── FOOTER ── */
+footer {
+  background:var(--dark); border-top:1px solid var(--border);
+  padding:28px 40px; display:flex; align-items:center;
+  justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.footer-logo { font-family:var(--font-display); font-size:14px; letter-spacing:2px; text-transform:uppercase; }
+.footer-logo span { color:var(--bolt); }
+footer p { font-size:12px; color:var(--muted); }
+
+/* ══════════════════════════════════════════
+   CONCIERGE WIDGET
+══════════════════════════════════════════ */
+#tf-bubble {
+  position:fixed; bottom:28px; right:28px;
+  width:64px; height:64px; border-radius:50%;
+  background:var(--bolt); color:var(--black);
+  border:none; cursor:pointer; z-index:9999;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; box-shadow:0 4px 24px rgba(91,138,255,0.35);
+  transition:transform .2s, box-shadow .2s;
+  animation:tf-pulse 3s ease-in-out infinite;
+}
+#tf-bubble:hover { transform:scale(1.08); box-shadow:0 6px 32px rgba(91,138,255,0.55); }
+@keyframes tf-pulse {
+  0%,100%{ box-shadow:0 4px 24px rgba(91,138,255,0.35); }
+  50%{ box-shadow:0 4px 36px rgba(91,138,255,0.6); }
+}
+#tf-bubble-label {
+  position:fixed; bottom:10px; right:28px;
+  font-size:10px; font-weight:700; color:var(--bolt);
+  font-family:var(--font-body); letter-spacing:0.5px;
+  text-align:center; width:64px; z-index:9999;
+  pointer-events:none;
+}
+
+#tf-window {
+  display:none; position:fixed; bottom:108px; right:28px;
+  width:375px; height:600px;
+  background:var(--dark); border:1px solid var(--border);
+  border-radius:16px; box-shadow:0 16px 64px rgba(0,0,0,0.7);
+  z-index:9998; flex-direction:column; overflow:hidden;
+  font-family:var(--font-body);
+}
+#tf-window.open { display:flex; }
+
+#tf-header {
+  background:var(--surface); padding:14px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+#tf-header-info { display:flex; align-items:center; gap:10px; }
+#tf-avatar {
+  width:36px; height:36px; border-radius:50%;
+  background:var(--bolt-dim); border:2px solid var(--bolt);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0;
+}
+#tf-name { font-size:13px; font-weight:700; color:var(--bolt); display:block; }
+#tf-sub  { font-size:11px; color:var(--muted); display:block; }
+#tf-close {
+  background:none; border:none; color:var(--muted);
+  font-size:20px; cursor:pointer; padding:0; line-height:1;
+  transition:color .2s;
+}
+#tf-close:hover { color:var(--white); }
+
+#tf-messages {
+  flex:1; overflow-y:auto; padding:14px 13px;
+  display:flex; flex-direction:column; gap:9px;
+}
+#tf-messages::-webkit-scrollbar { width:3px; }
+#tf-messages::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+.tf-msg {
+  max-width:86%; padding:10px 13px; border-radius:12px;
+  font-size:13px; line-height:1.55; word-wrap:break-word;
+}
+.tf-msg.bot {
+  background:var(--surface); color:var(--white);
+  align-self:flex-start; border-bottom-left-radius:3px;
+  border:1px solid var(--border);
+}
+.tf-msg.bot.bolt-msg {
+  background:var(--bolt-dim); border-color:var(--bolt-glow); color:var(--white);
+}
+.tf-msg.user {
+  background:var(--white); color:var(--black);
+  align-self:flex-end; border-bottom-right-radius:3px;
+  font-weight:600;
+}
+
+#tf-menu-wrap {
+  padding:4px 12px 8px;
+  display:flex; flex-direction:column; gap:4px;
+  flex-shrink:0; max-height:220px; overflow-y:auto;
+}
+#tf-menu-wrap::-webkit-scrollbar { width:3px; }
+#tf-menu-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.tf-menu-col { display:flex; flex-direction:column; gap:5px; }
+.tf-menu-row { display:flex; gap:5px; flex-wrap:wrap; }
+
+.tf-btn {
+  background:var(--surface); border:1.5px solid var(--border);
+  color:var(--white); border-radius:8px;
+  padding:8px 12px; font-size:12px; font-weight:600;
+  cursor:pointer; transition:all .15s;
+  text-align:left; font-family:var(--font-body); line-height:1.3;
+}
+.tf-btn:hover { border-color:var(--bolt); color:var(--bolt); }
+.tf-btn.bolt { border-color:var(--bolt); color:var(--bolt); background:var(--bolt-dim); }
+.tf-btn.bolt:hover { background:var(--bolt); color:var(--black); }
+.tf-btn.confirm { border-color:#22c55e; color:#22c55e; background:rgba(34,197,94,0.08); }
+.tf-btn.confirm:hover { background:#22c55e; color:var(--black); }
+.tf-btn.unavail { border-color:var(--border); color:var(--muted); cursor:default; text-decoration:line-through; opacity:0.5; }
+
+#tf-input-wrap {
+  display:flex; gap:8px; padding:10px 12px 12px;
+  background:var(--surface); border-top:1px solid var(--border); flex-shrink:0;
+}
+#tf-input {
+  flex:1; background:var(--dark); border:1.5px solid var(--border);
+  border-radius:8px; padding:9px 12px; font-size:13px;
+  color:var(--white); font-family:var(--font-body); outline:none;
+  transition:border-color .2s;
+}
+#tf-input:focus { border-color:var(--bolt); }
+#tf-input::placeholder { color:var(--muted); }
+#tf-send {
+  background:var(--bolt); border:none; border-radius:8px;
+  width:36px; height:36px; cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:opacity .15s;
+}
+#tf-send:hover { opacity:0.85; }
+#tf-send svg { stroke:#fff; }
+#tf-call-bar {
+  display:flex; align-items:center; justify-content:center;
+  gap:16px; padding:6px 12px 10px;
+  background:var(--surface); flex-shrink:0;
+  border-top:1px solid rgba(255,255,255,0.04);
+}
+#tf-call-bar span { font-size:11px; color:var(--muted); }
+.tf-call-link {
+  display:flex; align-items:center; gap:4px;
+  font-size:11.5px; font-weight:700; color:var(--bolt);
+  text-decoration:none; transition:opacity .15s;
+}
+.tf-call-link:hover { opacity:0.75; }
+
+@media(max-width:600px){
+  nav { padding:0 16px; }
+  .nav-links { display:none; }
+  .nav-hamburger { display:block; }
+  .hero { padding:100px 20px 60px; }
+  .section { padding:60px 20px; }
+  .cards-grid { grid-template-columns:1fr; }
+  footer { flex-direction:column; text-align:center; }
+  .bolt-band { padding:48px 20px; }
+  #tf-window { width:calc(100vw - 20px); right:10px; bottom:100px; height:74vh; }
+  #tf-bubble { right:16px; bottom:20px; }
+  #tf-bubble-label { right:16px; }
+  .hero-stats { gap:28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SEAN'S <span>HOUSE OF PAIN</span></div>
+  <div class="nav-links">
+    <a href="#">Memberships</a>
+    <a href="#">Classes</a>
+    <a href="#">Locations</a>
+    <a href="#">About</a>
+    <button class="nav-bolt-btn" onclick="openChatAndGoBolt()">Recovery Lounge</button>
+  </div>
+  <button class="nav-hamburger" onclick="openChat()">☰</button>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">Murfreesboro's Premier Training Facility · 3 Locations</div>
+    <h1>Train<br/><em>Hard.</em><br/>Recover<br/><em>Smart.</em></h1>
+    <p class="hero-sub">World-class equipment, expert coaching, and 60+ weekly classes — plus the exclusive Bolt Recovery Lounge for members who demand more.</p>
+    <div class="hero-ctas">
+      <button class="btn-primary" onclick="openChat()">Explore Memberships</button>
+      <button class="btn-outline" onclick="openChatAndGoBolt()">Recovery Lounge →</button>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">12K+</div>
+        <div class="hero-stat-label">Active Members</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">60+</div>
+        <div class="hero-stat-label">Weekly Classes</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">3</div>
+        <div class="hero-stat-label">Locations</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECOVERY LOUNGE PROMO BAND -->
+<div class="bolt-band">
+  <div class="bolt-band-eyebrow">Exclusive Member Benefit</div>
+  <h2>Bolt Recovery<br/>Lounge</h2>
+  <p>Compression therapy, infrared recovery, and guided sessions — available exclusively to Sean's House of Pain members. Train harder, recover faster, perform better.</p>
+  <button class="btn-dark" onclick="openChatAndGoBolt()">Book a Recovery Session →</button>
+</div>
+
+<!-- SERVICES -->
+<div style="background:var(--black); padding:80px 0;">
+  <div class="section" style="padding-top:0; padding-bottom:0;">
+    <div class="section-eyebrow">What We Offer</div>
+    <h2>Everything You<br/>Need to Perform.</h2>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">🏋️</div>
+        <h3>Strength & Cardio</h3>
+        <p>50,000 sq ft of premium equipment, free weights, and dedicated cardio zones — available to members 24/7.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧑‍🤝‍🧑</div>
+        <h3>Group Classes</h3>
+        <p>Over 60 weekly classes — HIIT, yoga, cycling, boxing — led by certified instructors at all three locations.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💆</div>
+        <h3>Recovery Lounge</h3>
+        <p>An exclusive member benefit: compression therapy, infrared recovery, and massage sessions to get you back faster.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">SEAN'S <span>HOUSE OF PAIN</span></div>
+  <p>&copy; 2025 Sean's House of Pain &amp; Recovery · All rights reserved · <em>Demo Page</em></p>
+</footer>
+
+<!-- BUBBLE -->
+<button id="tf-bubble" onclick="toggleChat()" aria-label="Open concierge">💬</button>
+<div id="tf-bubble-label">Concierge</div>
+
+<!-- CHAT WINDOW -->
+<div id="tf-window" role="dialog" aria-label="Sean's House of Pain Concierge">
+  <div id="tf-header">
+    <div id="tf-header-info">
+      <div id="tf-avatar">🏋️</div>
+      <div>
+        <span id="tf-name">SHOP Concierge</span>
+        <span id="tf-sub">Sean's House of Pain · Online Now</span>
+      </div>
+    </div>
+    <button id="tf-close" onclick="toggleChat()">×</button>
+  </div>
+  <div id="tf-messages"></div>
+  <div id="tf-menu-wrap"></div>
+  <div id="tf-input-wrap">
+    <input id="tf-input" type="text" placeholder="Ask anything..." autocomplete="off"/>
+    <button id="tf-send" onclick="handleInput(document.getElementById('tf-input').value)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+  <div id="tf-call-bar">
+    <span>Call us:</span>
+    <a class="tf-call-link" href="tel:6155550100">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 5.53 5.53l.87-.87a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      (615) 555-0100
+    </a>
+  </div>
+</div>
+
+<script>
+(function() {
+
+// ── Fake CRM ──────────────────────────────────────────────────────────────────
+var CRM = {
+  '6155551001': { name: 'Sean Miller',  tier: 'bolt' },
+  '6155551002': { name: 'Sarah Jones',  tier: 'standard' },
+  '6155551003': { name: 'Mike Taylor',  tier: 'bolt' },
+};
+
+function lookupPhone(raw) {
+  var digits = raw.replace(/\D/g, '');
+  if (digits.length === 10) digits = digits;
+  else if (digits.length === 11 && digits[0] === '1') digits = digits.slice(1);
+  return CRM[digits] || null;
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────
+var state = {
+  awaitingPhone: false,
+  awaitingPhoneFor: null, // 'schedule' | 'view' | 'reschedule' | 'cancel'
+  verifiedMember: null,
+  selectedService: null,
+  selectedSlot: null,
+};
+
+// ── DOM refs ───────────────────────────────────────────────────────────────────
+var messages  = document.getElementById('tf-messages');
+var menuWrap  = document.getElementById('tf-menu-wrap');
+var input     = document.getElementById('tf-input');
+var win       = document.getElementById('tf-window');
+
+// ── Menus ─────────────────────────────────────────────────────────────────────
+var MAIN_MENU = [
+  { label:'🏷 Memberships',          value:'__MEMBERSHIPS__' },
+  { label:'📅 Classes & Events',     value:'__CLASSES__' },
+  { label:'🙋 Member Services',      value:'__MEMBER_SERVICES__' },
+  { label:'⚡ Bolt Recovery Lounge', value:'__BOLT__', bolt:true },
+  { label:'📞 Contact Us',           value:'__CONTACT__' },
+];
+
+var BOLT_MENU = [
+  { label:'⚡ Bolt Recovery Members',      value:'__BOLT_MEMBERS__', bolt:true },
+  { label:'💆 Recovery Services',          value:'__BOLT_SERVICES__' },
+  { label:'🏆 Membership Benefits',        value:'__BOLT_BENEFITS__' },
+  { label:'❓ Recovery FAQs',              value:'__BOLT_FAQS__' },
+  { label:'✨ Become a Bolt Recovery Member', value:'__BOLT_JOIN__' },
+  { label:'🏠 Main Menu',                  value:'__MAIN_MENU__' },
+];
+
+var BOLT_MEMBER_MENU = [
+  { label:'📅 Schedule Recovery Session',  value:'__SCHEDULE__', bolt:true },
+  { label:'📋 View Upcoming Appointments', value:'__VIEW_APPTS__' },
+  { label:'🔄 Reschedule Appointment',     value:'__RESCHEDULE__' },
+  { label:'❌ Cancel Appointment',         value:'__CANCEL__' },
+  { label:'⬅ Back',                        value:'__BOLT__' },
+];
+
+var SERVICES_MENU = [
+  { label:'💆 Recovery Massage Therapy', value:'__SVC_MASSAGE__', bolt:true },
+  { label:'⬅ Back',                       value:'__BOLT_MEMBERS__' },
+];
+
+// ── Time slots ─────────────────────────────────────────────────────────────────
+var SLOTS = [
+  { label:'Today — 2:00 PM',   value:'Today at 2:00 PM',  avail:false },
+  { label:'Today — 3:00 PM',   value:'Today at 3:00 PM',  avail:true  },
+  { label:'Today — 4:00 PM',   value:'Today at 4:00 PM',  avail:true  },
+  { label:'Tomorrow — 10:00 AM', value:'Tomorrow at 10:00 AM', avail:true  },
+  { label:'Tomorrow — 11:00 AM', value:'Tomorrow at 11:00 AM', avail:false },
+  { label:'Tomorrow — 1:00 PM',  value:'Tomorrow at 1:00 PM',  avail:true  },
+];
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function scroll() { setTimeout(function(){ messages.scrollTop = messages.scrollHeight; }, 50); }
+
+function addMsg(text, who, boltStyle) {
+  var d = document.createElement('div');
+  d.className = 'tf-msg ' + who + (boltStyle ? ' bolt-msg' : '');
+  d.innerHTML = text.replace(/\n/g,'<br>');
+  messages.appendChild(d);
+  scroll();
+}
+
+function clearMenu() { menuWrap.innerHTML = ''; }
+
+function renderCol(items) {
+  clearMenu();
+  var col = document.createElement('div');
+  col.className = 'tf-menu-col';
+  items.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.className = 'tf-btn' + (item.bolt ? ' bolt' : '');
+    btn.textContent = item.label;
+    btn.onclick = function(){ handleInput(item.value); };
+    col.appendChild(btn);
+  });
+  menuWrap.appendChild(col);
+}
+
+function renderRow(items) {
+  clearMenu();
+  var row = document.createElement('div');
+  row.className = 'tf-menu-row';
+  items.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.className = 'tf-btn' + (item.bolt ? ' bolt' : '') + (item.confirm ? ' confirm' : '') + (item.unavail ? ' unavail' : '');
+    btn.textContent = item.label;
+    if (!item.unavail) btn.onclick = function(){ handleInput(item.value); };
+    row.appendChild(btn);
+  });
+  menuWrap.appendChild(row);
+}
+
+function renderSlots() {
+  clearMenu();
+  addMsg("Select an available time slot:", 'bot');
+  var col = document.createElement('div');
+  col.className = 'tf-menu-col';
+  SLOTS.forEach(function(slot) {
+    var btn = document.createElement('button');
+    btn.className = 'tf-btn' + (slot.avail ? ' bolt' : ' unavail');
+    btn.textContent = slot.avail ? '✅ ' + slot.label : '🚫 ' + slot.label + ' — Unavailable';
+    if (slot.avail) {
+      (function(s){ btn.onclick = function(){ confirmSlot(s); }; })(slot);
+    }
+    col.appendChild(btn);
+  });
+  // Back button
+  var back = document.createElement('button');
+  back.className = 'tf-btn';
+  back.textContent = '⬅ Back';
+  back.onclick = function(){ handleInput('__BOLT_MEMBERS__'); };
+  col.appendChild(back);
+  menuWrap.appendChild(col);
+}
+
+function confirmSlot(slot) {
+  state.selectedSlot = slot.value;
+  addMsg(slot.label, 'user');
+  clearMenu();
+  addMsg('✅ Recovery Session Confirmed!\n\nService: ' + state.selectedService + '\nDate/Time: ' + slot.value + '\n\nA confirmation has been sent to your registered email.', 'bot', true);
+  setTimeout(function(){
+    addMsg('📋 Preparation Tips:\n\n• Hydrate before your session\n• Wear comfortable clothing\n• Arrive 5 minutes early\n• Avoid heavy meals immediately before treatment', 'bot');
+    renderRow([
+      { label:'⚡ Bolt Member Menu', value:'__BOLT_MEMBERS__', bolt:true },
+      { label:'🏠 Main Menu',        value:'__MAIN_MENU__' },
+    ]);
+  }, 500);
+}
+
+function requestPhone(forAction) {
+  state.awaitingPhone = true;
+  state.awaitingPhoneFor = forAction;
+  state.verifiedMember = null;
+  clearMenu();
+  addMsg("Please enter the phone number associated with your Bolt Recovery membership:", 'bot');
+  renderRow([{ label:'🏠 Main Menu', value:'__MAIN_MENU__' }]);
+  input.focus();
+}
+
+function handlePhoneInput(text) {
+  state.awaitingPhone = false;
+  addMsg(text, 'user');
+  input.value = '';
+  var member = lookupPhone(text);
+
+  if (!member) {
+    addMsg("I couldn't verify that membership number.\n\nPlease double-check the number or visit the front desk for assistance.", 'bot');
+    renderRow([
+      { label:'🔄 Try Again',           value:'__RETRY_PHONE__' },
+      { label:'✨ Sign Up for Bolt',     value:'__BOLT_JOIN__' },
+      { label:'🏠 Main Menu',            value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  if (member.tier !== 'bolt') {
+    addMsg("Welcome, " + member.name + ". I can see your account — however, Bolt Recovery Lounge is an exclusive add-on for Bolt Recovery Members.\n\nYour current plan is Standard Membership. Upgrade today to unlock recovery sessions!", 'bot');
+    renderRow([
+      { label:'✨ Upgrade to Bolt',  value:'__BOLT_JOIN__', bolt:true },
+      { label:'🏠 Main Menu',        value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  state.verifiedMember = member;
+  addMsg('⚡ Welcome back, ' + member.name + '! Membership verified.', 'bot', true);
+
+  var action = state.awaitingPhoneFor;
+  setTimeout(function(){
+    if (action === 'schedule') {
+      addMsg("Which recovery service would you like to book?", 'bot');
+      renderCol(SERVICES_MENU);
+    } else if (action === 'view') {
+      addMsg('📋 Upcoming Appointments for ' + member.name + ':\n\nRecovery Massage Therapy — Tomorrow at 3:00 PM\n\nNo other upcoming sessions found.', 'bot');
+      renderRow([
+        { label:'⚡ Bolt Menu', value:'__BOLT_MEMBERS__', bolt:true },
+        { label:'🏠 Main Menu', value:'__MAIN_MENU__' },
+      ]);
+    } else if (action === 'reschedule') {
+      addMsg('Your current appointment:\nRecovery Massage Therapy — Tomorrow at 3:00 PM\n\nSelect a new time:', 'bot');
+      setTimeout(renderSlots, 200);
+    } else if (action === 'cancel') {
+      addMsg('Appointment to cancel:\nRecovery Massage Therapy — Tomorrow at 3:00 PM\n\nAre you sure you want to cancel?', 'bot');
+      renderRow([
+        { label:'✅ Yes, Cancel It',        value:'__CONFIRM_CANCEL__', confirm:true },
+        { label:'⬅ Keep My Appointment',    value:'__BOLT_MEMBERS__' },
+      ]);
+    }
+  }, 300);
+}
+
+// ── Main handler ───────────────────────────────────────────────────────────────
+function handleInput(text) {
+  text = (text || '').trim();
+  if (!text) return;
+
+  // Phone input interception
+  if (state.awaitingPhone) {
+    handlePhoneInput(text);
+    return;
+  }
+
+  // Show typed text in chat (only for real typed messages, not tokens)
+  if (text[0] !== '_') {
+    addMsg(text, 'user');
+    input.value = '';
+    clearMenu();
+
+    // NLP shortcuts
+    var lower = text.toLowerCase();
+    if (lower.indexOf('bolt') !== -1 || lower.indexOf('recovery') !== -1) { handleInput('__BOLT__'); return; }
+    if (lower.indexOf('member') !== -1) { handleInput('__MEMBERSHIPS__'); return; }
+    if (lower.indexOf('class') !== -1 || lower.indexOf('schedule') !== -1) { handleInput('__CLASSES__'); return; }
+    if (lower.indexOf('contact') !== -1 || lower.indexOf('phone') !== -1) { handleInput('__CONTACT__'); return; }
+
+    // Fallback
+    addMsg("I'm here to help! Whether you're looking to explore the Bolt Recovery Lounge, learn about memberships, or find a class — just use the menu or ask me anything.", 'bot');
+    renderCol(MAIN_MENU);
+    return;
+  }
+
+  // Token routing
+  input.value = '';
+  clearMenu();
+
+  if (text === '__MAIN_MENU__') {
+    state.awaitingPhone = false;
+    state.verifiedMember = null;
+    addMsg("What can I help you with today?", 'bot');
+    renderCol(MAIN_MENU);
+    return;
+  }
+
+  if (text === '__MEMBERSHIPS__') {
+    addMsg("🏆 Sean's House of Pain Memberships\n\nWe offer three tiers designed to match your goals:\n\n• Basic — Gym floor access, locker rooms, open cardio\n• Flex — All Basic perks + group classes + guest passes\n• Elite — All Flex perks + personal training credits + priority booking\n\nAdd ⚡ Bolt Recovery as an upgrade to any membership.", 'bot');
+    renderRow([
+      { label:'⚡ Add Bolt Recovery',   value:'__BOLT_JOIN__', bolt:true },
+      { label:'📞 Talk to Sales',       value:'__CONTACT__' },
+      { label:'🏠 Main Menu',           value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  if (text === '__CLASSES__') {
+    addMsg("📅 Classes & Events\n\nWe offer 60+ weekly classes across all fitness levels:\n\n• HIIT & Metabolic Conditioning (Mon/Wed/Fri)\n• Yoga & Mobility Flow (Tue/Thu/Sat)\n• Cycling & Spin (Daily 6am & 5:30pm)\n• Boxing Fundamentals (Mon/Wed)\n• Olympic Lifting Clinic (Sat mornings)\n\nAll classes included with Flex and Elite memberships.", 'bot');
+    renderRow([
+      { label:'📋 View Full Schedule', value:'__CONTACT__' },
+      { label:'🏠 Main Menu',          value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  if (text === '__MEMBER_SERVICES__') {
+    addMsg("🙋 Member Services\n\nWe're here to help with:\n\n• Membership changes & upgrades\n• Billing & payment questions\n• Guest pass requests\n• Personal training bookings\n• Facility feedback\n• Lost & found\n\nReach our team directly or stop by the front desk.", 'bot');
+    renderRow([
+      { label:'📞 Contact Front Desk', value:'__CONTACT__' },
+      { label:'⚡ Bolt Recovery',       value:'__BOLT__', bolt:true },
+      { label:'🏠 Main Menu',           value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  if (text === '__BOLT__') {
+    addMsg("⚡ Welcome to Bolt Recovery Lounge\n\nRecover. Recharge. Perform.\n\nExclusive recovery services designed to help members feel their best before and after every workout.", 'bot', true);
+    renderCol(BOLT_MENU);
+    return;
+  }
+
+  if (text === '__BOLT_MEMBERS__') {
+    addMsg("⚡ Bolt Recovery Member Portal\n\nWhat would you like to do today?", 'bot', true);
+    renderCol(BOLT_MEMBER_MENU);
+    return;
+  }
+
+  if (text === '__SCHEDULE__') { requestPhone('schedule'); return; }
+  if (text === '__VIEW_APPTS__') { requestPhone('view'); return; }
+  if (text === '__RESCHEDULE__') { requestPhone('reschedule'); return; }
+  if (text === '__CANCEL__') { requestPhone('cancel'); return; }
+  if (text === '__RETRY_PHONE__') { requestPhone(state.awaitingPhoneFor || 'schedule'); return; }
+
+  if (text === '__CONFIRM_CANCEL__') {
+    addMsg("✅ Your appointment has been cancelled.\n\nRecovery Massage Therapy — Tomorrow at 3:00 PM has been removed from your schedule.", 'bot');
+    renderRow([
+      { label:'📅 Rebook a Session', value:'__SCHEDULE__', bolt:true },
+      { label:'🏠 Main Menu',         value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  if (text === '__SVC_MASSAGE__') {
+    state.selectedService = 'Recovery Massage Therapy';
+    addMsg("💆 Recovery Massage Therapy selected.\n\n60-minute targeted session focused on muscle recovery, tension relief, and improved circulation — performed by certified recovery specialists.", 'bot');
+    setTimeout(renderSlots, 200);
+    return;
+  }
+
+  if (text === '__BOLT_SERVICES__') {
+    addMsg("💆 Bolt Recovery Services\n\n⚡ Recovery Chair Therapy\nSupports relaxation, circulation, and deep muscle recovery through guided compression chair sessions.\n\n🔵 Compression Therapy\nAir compression sleeves target the legs, hips, and arms to reduce soreness and improve post-workout recovery.\n\n🌡 Infrared Recovery\nInfrared heat supports relaxation, improved circulation, and whole-body wellness — ideal after intense training.", 'bot');
+    renderRow([
+      { label:'📅 Book a Session',    value:'__BOLT_MEMBERS__', bolt:true },
+      { label:'⬅ Back to Bolt',       value:'__BOLT__' },
+    ]);
+    return;
+  }
+
+  if (text === '__BOLT_BENEFITS__') {
+    addMsg("🏆 Bolt Recovery Member Benefits\n\n• Priority scheduling — book before general members\n• Exclusive recovery equipment access\n• Member wellness promotions & seasonal offers\n• Guided recovery recommendations from specialists\n• Convenient online scheduling & appointment management\n• Unlimited access during open recovery hours", 'bot');
+    renderRow([
+      { label:'✨ Become a Member', value:'__BOLT_JOIN__', bolt:true },
+      { label:'⬅ Back to Bolt',    value:'__BOLT__' },
+    ]);
+    return;
+  }
+
+  if (text === '__BOLT_FAQS__') {
+    addMsg("❓ Bolt Recovery FAQs\n\nHow long are recovery sessions?\nSessions range from 30 to 60 minutes depending on the service selected.\n\nWhat should I wear?\nComfortable, athletic clothing. For compression therapy, shorts or fitted athletic pants work best.\n\nHow often can I book?\nBolt Recovery Members may book up to 5 sessions per week. Sessions can be booked back-to-back on the same day.\n\nCan I use the lounge after workouts?\nAbsolutely — recovery after training is the ideal time. Sessions are available until 9pm on weekdays.\n\nDo I need to be a Bolt Recovery Member?\nYes. The Bolt Recovery Lounge is exclusive to Bolt Recovery Members. Standard members can upgrade at any time.", 'bot');
+    renderRow([
+      { label:'✨ Sign Up for Bolt', value:'__BOLT_JOIN__', bolt:true },
+      { label:'⬅ Back to Bolt',     value:'__BOLT__' },
+      { label:'🏠 Main Menu',        value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  if (text === '__BOLT_JOIN__') {
+    addMsg("✨ Become a Bolt Recovery Member\n\nAdd Bolt Recovery to any existing Sean's House of Pain membership — available at the front desk or through our app.\n\nBolt Recovery includes:\n• All recovery services\n• Priority scheduling\n• Exclusive equipment access\n• Up to 5 sessions per week\n\nStop by the front desk or call us to add Bolt Recovery to your plan today.", 'bot', true);
+    renderRow([
+      { label:'📞 Contact Front Desk', value:'__CONTACT__' },
+      { label:'⬅ Back to Bolt',        value:'__BOLT__' },
+    ]);
+    return;
+  }
+
+  if (text === '__CONTACT__') {
+    addMsg("📞 Contact Sean's House of Pain\n\nFront Desk: (615) 555-0100\nEmail: hello@seanshouseofpain.com\nHours: Mon–Fri 5am–11pm · Sat–Sun 7am–9pm\n\nLocations:\n• Murfreesboro — 1400 Medical Center Pkwy\n• Smyrna — 700 Sam Ridley Pkwy\n• LaVergne — 5050 Murfreesboro Rd", 'bot');
+    renderRow([
+      { label:'⚡ Bolt Recovery', value:'__BOLT__', bolt:true },
+      { label:'🏠 Main Menu',     value:'__MAIN_MENU__' },
+    ]);
+    return;
+  }
+
+  // Fallback
+  addMsg("Great question — let me point you in the right direction.", 'bot');
+  renderCol(MAIN_MENU);
+}
+
+// ── Chat open/close ────────────────────────────────────────────────────────────
+var chatOpen = false;
+var initDone = false;
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  win.classList.toggle('open', chatOpen);
+  if (chatOpen && !initDone) {
+    initDone = true;
+    addMsg("Hi! I'm the Sean's House of Pain concierge.\n\nI can help you explore memberships, browse classes, or book a Recovery Lounge session. What can I help you with today?", 'bot');
+    renderCol(MAIN_MENU);
+  }
+}
+
+function openChat() {
+  if (!chatOpen) toggleChat();
+}
+
+function openChatAndGoBolt() {
+  openChat();
+  setTimeout(function(){ handleInput('__BOLT__'); }, chatOpen ? 0 : 300);
+}
+
+// ── Input events ───────────────────────────────────────────────────────────────
+document.getElementById('tf-input').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') handleInput(this.value);
+});
+
+// ── Expose to global scope for onclick handlers ────────────────────────────────
+window.toggleChat        = toggleChat;
+window.openChat          = openChat;
+window.openChatAndGoBolt = openChatAndGoBolt;
+window.handleInput       = handleInput;
+
+})();
+</script>
+</body>
+</html>
