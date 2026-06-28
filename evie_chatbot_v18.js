@@ -102,7 +102,7 @@
   win.innerHTML = `
     <div id="evie-header">
       <div id="evie-header-info">
-        <div id="evie-avatar"><img src="https://birthingbycalm.com/wp-content/uploads/2025/07/logo-brown.png" style="width:28px;height:28px;object-fit:contain;border-radius:50%;"></div>
+        <div id="evie-avatar"><img src="https://cdn.jsdelivr.net/gh/gonzo4745/arous-bot@main/evielogo.png" style="width:28px;height:28px;object-fit:contain;border-radius:50%;"></div>
         <div>
           <span id="evie-name">Evie</span>
           <span id="evie-status">Birthing By Calm · Online</span>
@@ -121,7 +121,7 @@
 
   var bubble = document.createElement('button');
   bubble.id = 'evie-bubble';
-  bubble.innerHTML = '<img src="https://birthingbycalm.com/wp-content/uploads/2025/07/logo-brown.png" style="width:52px;height:52px;object-fit:contain;border-radius:50%;transform:scaleX(-1);">';
+  bubble.innerHTML = '<img src="https://cdn.jsdelivr.net/gh/gonzo4745/arous-bot@main/evielogo.png" style="width:52px;height:52px;object-fit:contain;border-radius:50%;transform:scaleX(-1);">';
   document.body.appendChild(bubble);
 
   var blabel = document.createElement('div');
