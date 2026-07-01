@@ -570,13 +570,7 @@
   function pageServiceBusinessReview() {
     return function(p) {
       p.appendChild(titleBlock('Complimentary Service Business Review'));
-      p.appendChild(contentBlock('A no-cost, no-obligation review designed specifically for local service businesses.
-
-We’ll take a look at how your business handles customer inquiries, follow-up, scheduling, and online presence — and identify the most practical opportunities for improvement.
-
-No technical knowledge required. No commitment needed.
-
-Daniel will review your responses and reach out to share what he finds.'));
+      p.appendChild(contentBlock('A no-cost, no-obligation review designed specifically for local service businesses.\n\nWe\u2019ll take a look at how your business handles customer inquiries, follow-up, scheduling, and online presence \u2014 and identify the most practical opportunities for improvement.\n\nNo technical knowledge required. No commitment needed.\n\nDaniel will review your responses and reach out to share what he finds.'));
       p.appendChild(btnStack([
         { label: '📋 Start Your Free Review', msg: 'I would like to start a Service Business Review', fromButton: true },
       ]));
