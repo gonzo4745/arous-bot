@@ -1,0 +1,1901 @@
+// arous_chatbot_v38.js
+// v38 — 2026-09-21
+// Changes from v37: Removed the automatic "schedule intent" Calendly panel in
+// sendMessage(). Previously, if ANY LLM reply contained "schedule a",
+// "schedule an assessment", "go ahead and schedule", or "book an assessment"
+// (note "schedule a" also matches "schedule appointments"), the Concierge
+// replaced the menu with a panel titled "Which assessment would you like to
+// schedule?" offering "Lost Opportunities Assessment" and "Business
+// Operations Assessment" buttons that both opened Calendly directly. Those
+// are not direct-booking options. LLM replies now always render as a normal
+// chat message followed by the standard main menu, so visitors reach the
+// complimentary assessment questionnaires (Complimentary Assessments) or the
+// Comprehensive Business Assessment booking page (Services) through the
+// existing menu buttons. No new buttons, pages, or scheduling options were
+// added; questionnaires, submission, confirmation pages, and all remaining
+// Calendly buttons are unchanged.
+// Also corrected the "What happens during an assessment?" FAQ: only the Business
+// Operations Assessment confirmation page has a Calendly button; the
+// Complimentary Service Business Review confirmation page does not (Daniel
+// follows up after reviewing the responses).
+//
+// Previous header (v37):
+// arous_chatbot_v37.js
+// v37 — 2026-09-21
+// Changes from v36: (1) Comprehensive Business Assessment page title corrected
+// from "Business Operations Assessment" to "Comprehensive Business Assessment"
+// so it is no longer confused with the complimentary Business Operations
+// Assessment. (2) Hardcoded FAQ answers realigned to the latest LLM prompt:
+// how_long, what_types, what_issues, software, and ai_replacing now use the
+// prompt's FAQ wording; what_happens rewritten to describe the two
+// complimentary assessments (Complimentary Service Business Review and
+// Business Operations Assessment) and the separate Comprehensive Business
+// Assessment. No changes to navigation, buttons, questionnaires, submission,
+// confirmation pages, Calendly, lead capture, endpoints, styling, or logic.
+//
+// Previous header (v36):
+// arous_chatbot_v36.js
+// v36 — 2026-09-21
+// Changes from v35: CONTENT / BRANDING UPDATE ONLY. Customer-facing copy
+// aligned to the updated Arous AI Concierge LLM prompt (Arous_Prompt_9-21).
+// Updated text for: Services menu intro, Comprehensive Business Assessment
+// page, Lost Opportunities page (currently not linked from any menu), AI
+// Website Concierge, AI Solutions menu intro + solution pages (Workflow
+// Automation, AI Scheduling Assistant, CRM Integrations, Missed Call
+// Text-Back, AI SMS Assistant, Arous Voice, Custom AI Solutions, Website SEO
+// & AI Search), Training menu, Complimentary Assessments menu description,
+// step-1 intro text of both complimentary questionnaires, FAQ answers, and
+// the Talk to Daniel location line. NO changes to navigation, button labels,
+// questionnaire questions, submission/webhook logic, confirmation pages,
+// Calendly buttons, lead capture, config/endpoints, styling, or chat logic.
+//
+// Previous header (v35):
+// Changes from v34: Added click/open event tracking. New EVENTS_WEBHOOK
+// (https://arous.app.n8n.cloud/webhook/Arous-Action_Tracker) + trackEvent()
+// helper, fire-and-forget, logs to its own sheet — does not touch the
+// existing conversation-log webhook. Tracks: widget open (main bubble +
+// all external arousOpen/arousToggle/arousOpenAssessment entry points),
+// every btnStack and navRow button click (covers all menus site-wide),
+// and video card clicks. No existing menus, flows, styling, or click
+// behavior changed — trackEvent() calls ride alongside, not in place of.
+
+(function () {
+
+  // ─── CONFIG ───────────────────────────────────────────────────────────────
+  var WEBHOOK = "https://arous.app.n8n.cloud/webhook/b7286461-b675-4882-84e4-d0dbb73a2ca3";
+  var FORM_WEBHOOK = "https://arous.app.n8n.cloud/webhook/Assessments";
+  var EVENTS_WEBHOOK = "https://arous.app.n8n.cloud/webhook/Arous-Action_Tracker";
+  var GREETING = "Hi, I'm Arous Concierge. How can I help your business today?";
+  var ICON = "https://i.imgur.com/jl9rwAJ.png";
+  var SESSION_ID = Math.random().toString(36).slice(2);
+
+  // Fire-and-forget event logging — never blocks or affects existing chat
+  // behavior. Logs to its own "Arous Action Tracker" sheet via its own
+  // webhook; does not touch the existing conversation-log webhook/sheet.
+  function trackEvent(eventType, eventLabel, page) {
+    try {
+      fetch(EVENTS_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          SessionID: SESSION_ID,
+          EventType: eventType,
+          EventLabel: eventLabel,
+          Page: page || ''
+        })
+      });
+    } catch (e) { /* non-blocking: tracking failures never interrupt the chat */ }
+  }
+
+  // ─── STYLES ───────────────────────────────────────────────────────────────
+  var style = document.createElement('style');
+  style.textContent = `
+    #arous-bubble-wrap {
+      position: fixed;
+      bottom: 16px;
+      right: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0px;
+      z-index: 999999;
+      cursor: pointer;
+      transition: transform .2s ease;
+    }
+    #arous-bubble-wrap:hover { transform: scale(1.08); }
+    #arous-bubble {
+      width: 72px;
+      height: 72px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      display: block;
+    }
+    #arous-bubble img { width: 100%; height: 100%; object-fit: contain; }
+    #arous-chat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1a237e;
+      font-family: sans-serif;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      text-align: center;
+      margin-top: -12px;
+    }
+    @media (max-width: 600px) {
+      #arous-bubble-wrap { right: 16px; bottom: 20px; }
+    }
+
+    #arous-window {
+      position: fixed;
+      bottom: 115px;
+      right: 28px;
+      width: 360px;
+      height: 580px;
+      border-radius: 16px;
+      background: #0a0a0f;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 24px 64px rgba(0,0,0,.6);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 999998;
+      font-family: sans-serif;
+    }
+    #arous-window.open { display: flex; }
+
+    #arous-header {
+      background: linear-gradient(135deg, #0a1628, #0d2255);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    #arous-close {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.6);
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+      padding: 0;
+    }
+
+    #arous-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #arous-input-area {
+      padding: 12px 12px 10px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    #arous-input {
+      flex: 1;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #fff;
+      resize: none;
+      outline: none;
+      font-size: 16px;
+      font-family: inherit;
+    }
+    #arous-send {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #1a56db, #3b82f6);
+      color: #fff;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    #arous-footer {
+      padding: 8px;
+      text-align: center;
+      color: rgba(255,255,255,.25);
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .arous-bot, .arous-user {
+      padding: 10px 13px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      line-height: 1.55;
+      max-width: 85%;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .arous-bot {
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.9);
+      align-self: flex-start;
+      border-radius: 4px 14px 14px 14px;
+    }
+    .arous-user {
+      background: linear-gradient(135deg, #3b1278, #5b21b6);
+      color: #fff;
+      align-self: flex-end;
+      border-radius: 14px 4px 14px 14px;
+    }
+    .arous-bot a { color: #a78bfa; text-decoration: underline; }
+
+    /* ── Menu panel — replaces in-place, never stacks ── */
+    #arous-menu-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-self: stretch;
+    }
+    .arous-btn-stack { display: flex; flex-direction: column; gap: 8px; align-self: stretch; }
+    .arous-btn {
+      background: transparent;
+      border: 1px solid rgba(167,139,250,.4);
+      color: #a78bfa;
+      border-radius: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      text-align: left;
+      font-family: sans-serif;
+      transition: background .2s, border-color .2s;
+      width: 100%;
+    }
+    .arous-btn:hover { background: rgba(167,139,250,.1); border-color: #a78bfa; }
+
+    .arous-video-card {
+      background: transparent;
+      border: 1px solid rgba(167,139,250,.4);
+      color: #a78bfa;
+      border-radius: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      text-align: left;
+      font-family: sans-serif;
+      transition: background .2s, border-color .2s;
+      width: 100%;
+      display: block;
+    }
+    .arous-video-card:hover { background: rgba(167,139,250,.1); border-color: #a78bfa; }
+    .arous-video-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #a78bfa;
+    }
+
+    .arous-menu-label {
+      font-size: 12.5px;
+      color: rgba(255,255,255,.5);
+      padding: 2px 0 4px 2px;
+      font-style: italic;
+    }
+    .arous-menu-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255,255,255,.95);
+      padding: 0 0 6px 0;
+      letter-spacing: 0.2px;
+    }
+    .arous-menu-content {
+      font-size: 13px;
+      color: rgba(255,255,255,.75);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      padding: 2px 0 6px 0;
+    }
+
+    /* ── Assessment form fields ── */
+    .arous-form-progress {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .arous-form-progress-dot {
+      height: 4px;
+      flex: 1;
+      border-radius: 2px;
+      background: rgba(255,255,255,.1);
+    }
+    .arous-form-progress-dot.filled { background: #a78bfa; }
+    .arous-form-step-label {
+      font-size: 11px;
+      color: rgba(167,139,250,.75);
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .arous-form-label {
+      font-size: 12px;
+      color: rgba(255,255,255,.55);
+      margin: 2px 0 4px 0;
+      display: block;
+    }
+    .arous-form-input, .arous-form-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      padding: 9px 11px;
+      color: #fff;
+      font-size: 13px;
+      font-family: sans-serif;
+      outline: none;
+      margin-bottom: 10px;
+    }
+    .arous-form-input:focus, .arous-form-textarea:focus { border-color: #a78bfa; }
+    .arous-form-textarea { resize: vertical; min-height: 70px; }
+    .arous-form-error {
+      font-size: 11.5px;
+      color: #f87171;
+      margin: -6px 0 8px 0;
+    }
+    .arous-form-check-group, .arous-form-radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .arous-form-check-row, .arous-form-radio-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: rgba(255,255,255,.85);
+      cursor: pointer;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      transition: border-color .15s, background .15s;
+    }
+    .arous-form-check-row:hover, .arous-form-radio-row:hover {
+      border-color: rgba(167,139,250,.4);
+      background: rgba(167,139,250,.06);
+    }
+    .arous-form-check-row-disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .arous-form-check-row input, .arous-form-radio-row input {
+      accent-color: #a78bfa;
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+    .arous-form-other-input { margin: -4px 0 6px 0; }
+    .arous-form-btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .arous-form-btn-row .arous-btn { width: auto; flex: 1; text-align: center; }
+
+    .arous-nav-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .arous-nav-btn {
+      background: transparent;
+      border: 1px solid rgba(167,139,250,.25);
+      color: rgba(167,139,250,.6);
+      border-radius: 8px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: sans-serif;
+      transition: background .2s, color .2s;
+      white-space: nowrap;
+    }
+    .arous-nav-btn:hover { background: rgba(167,139,250,.08); color: rgba(167,139,250,.9); }
+
+    /* ── Thinking indicator ── */
+    #arous-thinking {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-start;
+      padding: 10px 13px;
+      background: rgba(255,255,255,.06);
+      border-radius: 4px 14px 14px 14px;
+    }
+    #arous-thinking.visible { display: flex; }
+    #arous-thinking .brain {
+      font-size: 18px;
+      animation: brainPulse 1s ease-in-out infinite;
+    }
+    #arous-thinking .think-label {
+      font-size: 12px;
+      color: #a78bfa;
+      animation: fadeInOut 1s ease-in-out infinite;
+    }
+    @keyframes brainPulse {
+      0%,100% { transform: scale(1); filter: drop-shadow(0 0 0px #a78bfa); }
+      50%      { transform: scale(1.25); filter: drop-shadow(0 0 6px #a78bfa); }
+    }
+    @keyframes fadeInOut {
+      0%,100% { opacity: .4; }
+      50%      { opacity: 1; }
+    }
+
+    #arous-call-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 6px 14px 10px;
+      background: #0a0a0f;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+    #arous-call-bar span {
+      font-size: 11px;
+      color: rgba(255,255,255,.35);
+      font-family: sans-serif;
+    }
+    .arous-call-link {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+      font-family: sans-serif;
+      color: #a78bfa;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .arous-call-link:hover { opacity: 0.7; }
+
+    @media (max-width: 600px) {
+      #arous-window {
+        width: calc(100vw - 24px);
+        height: 85vh;
+        left: 50%;
+        right: auto;
+        bottom: auto;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+      #arous-bubble { right: 18px; bottom: 18px; }
+    }
+    /* ── Calendly modal overlay ── */
+    #arous-cal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.72);
+      z-index: 1000000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    #arous-cal-overlay.open { display: flex; }
+    #arous-cal-modal {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+      width: 90vw;
+      max-width: 900px;
+      height: 85vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #arous-cal-close {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top, 16px));
+      right: max(16px, env(safe-area-inset-right, 16px));
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: #fff;
+      border-radius: 50%;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 1000002;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+      transition: background .15s, transform .15s;
+    }
+    #arous-cal-close:hover { background: #f0f0f0; transform: scale(1.08); }
+    #arous-cal-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* Prevent iOS Safari auto-zoom on Calendly inputs */
+    #arous-cal-modal iframe {
+      touch-action: manipulation;
+    }
+    @media (max-width: 600px) {
+      #arous-cal-overlay {
+        padding: 0;
+        align-items: flex-start;
+      }
+      #arous-cal-modal {
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        border-radius: 0;
+        position: fixed;
+        inset: 0;
+      }
+    }
+    @media (max-width: 600px) {
+      #arous-cal-modal {
+        width: 100%;
+        height: 92vh;
+        border-radius: 12px;
+      }
+    }
+    /* ── Daniel's Videos modal overlay (mirrors Calendly overlay) ── */
+    #arous-video-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.72);
+      z-index: 1000000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    #arous-video-overlay.open { display: flex; }
+    #arous-video-modal {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5);
+      width: 90vw;
+      max-width: 700px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #arous-video-close {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top, 16px));
+      right: max(16px, env(safe-area-inset-right, 16px));
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: #fff;
+      border-radius: 50%;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 1000002;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+      transition: background .15s, transform .15s;
+    }
+    #arous-video-close:hover { background: #f0f0f0; transform: scale(1.08); }
+    #arous-video-body {
+      width: 100%;
+      line-height: 0;
+    }
+    @media (max-width: 600px) {
+      #arous-video-overlay {
+        padding: 0;
+        align-items: flex-start;
+      }
+      #arous-video-modal {
+        width: 100%;
+        border-radius: 0;
+        position: fixed;
+        inset: 0;
+        justify-content: center;
+        display: flex;
+        flex-direction: column;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ─── HTML ─────────────────────────────────────────────────────────────────
+  var win = document.createElement('div');
+  win.id = 'arous-window';
+  win.innerHTML = `
+    <div id="arous-header">
+      <span style="font-size:14px;font-weight:600">Arous Concierge</span>
+      <button id="arous-close">&times;</button>
+    </div>
+    <div id="arous-messages"></div>
+    <div id="arous-input-area">
+      <textarea id="arous-input" placeholder="Ask anything..." rows="1"></textarea>
+      <button id="arous-send">&#10148;</button>
+    </div>
+    <div id="arous-call-bar">
+      <span>Call or text us:</span>
+      <a class="arous-call-link" href="tel:6292483707">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.36 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 5.53 5.53l.87-.87a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Call 629-248-3707
+      </a>
+      <a class="arous-call-link" href="sms:6292483707">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Text Us
+      </a>
+    </div>
+    <div id="arous-footer">AROUS AI &middot;</div>
+  `;
+  document.body.appendChild(win);
+
+  var wrap = document.createElement('div');
+  wrap.id = 'arous-bubble-wrap';
+
+  var bubble = document.createElement('button');
+  bubble.id = 'arous-bubble';
+  bubble.innerHTML = '<img src="' + ICON + '"/>';
+  wrap.appendChild(bubble);
+
+  var chatLabel = document.createElement('div');
+  chatLabel.id = 'arous-chat-label';
+  chatLabel.textContent = 'Chat';
+  wrap.appendChild(chatLabel);
+
+  document.body.appendChild(wrap);
+  wrap.style.display = 'none';
+
+  // ─── CALENDLY MODAL ───────────────────────────────────────────────────────
+  var calOverlay = document.createElement('div');
+  calOverlay.id = 'arous-cal-overlay';
+  calOverlay.innerHTML = '<button id="arous-cal-close" aria-label="Close scheduling">&times;</button><div id="arous-cal-modal"><div id="arous-cal-body"></div></div>';
+  document.body.appendChild(calOverlay);
+
+  function openCalendly() {
+    // Prevent iOS Safari auto-zoom by ensuring viewport maximum-scale is set
+    var existingMeta = document.querySelector('meta[name="viewport"]');
+    if (existingMeta) {
+      var content = existingMeta.getAttribute('content');
+      if (content && content.indexOf('maximum-scale') === -1) {
+        existingMeta.setAttribute('content', content + ', maximum-scale=1.0');
+      }
+    }
+    var body = document.getElementById('arous-cal-body');
+    // Use a plain iframe each time — avoids Calendly session/cookie bleed
+    // between opens that causes a blank widget on second open
+    var iframe = document.createElement('iframe');
+    iframe.src = 'https://calendly.com/hello-arous/30min';
+    iframe.style.cssText = 'width:100%;height:100%;min-height:660px;border:none;display:block;';
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('scrolling', 'yes');
+    iframe.setAttribute('allowtransparency', 'true');
+    body.innerHTML = '';
+    body.appendChild(iframe);
+    calOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCalendly() {
+    calOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('arous-cal-body').innerHTML = '';
+  }
+
+  document.getElementById('arous-cal-close').onclick = closeCalendly;
+  calOverlay.addEventListener('click', function(e) {
+    if (e.target === calOverlay) closeCalendly();
+  });
+
+  // ─── DANIEL'S VIDEOS MODAL ──────────────────────────────────────────────────
+  var videoOverlay = document.createElement('div');
+  videoOverlay.id = 'arous-video-overlay';
+  videoOverlay.innerHTML = '<button id="arous-video-close" aria-label="Close video">&times;</button><div id="arous-video-modal"><div id="arous-video-body"></div></div>';
+  document.body.appendChild(videoOverlay);
+
+  function openVideoModal(video) {
+    var body = document.getElementById('arous-video-body');
+    body.innerHTML = '<iframe width="100%" height="315" src="https://www.youtube.com/embed/' + video.youtubeId + '" title="' + video.title.replace(/"/g,'&quot;') + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+    videoOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeVideoModal() {
+    videoOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('arous-video-body').innerHTML = '';
+  }
+
+  document.getElementById('arous-video-close').onclick = closeVideoModal;
+  videoOverlay.addEventListener('click', function(e) {
+    if (e.target === videoOverlay) closeVideoModal();
+  });
+
+  // ─── ELEMENTS ─────────────────────────────────────────────────────────────
+  var M = document.getElementById('arous-messages');
+  var input = document.getElementById('arous-input');
+
+  // ─── THINKING INDICATOR ───────────────────────────────────────────────────
+  var thinking = document.createElement('div');
+  thinking.id = 'arous-thinking';
+  thinking.innerHTML = '<span class="brain">🧠</span><span class="think-label">Thinking...</span>';
+
+  function showThinking() {
+    M.appendChild(thinking);
+    thinking.classList.add('visible');
+    M.scrollTop = M.scrollHeight;
+  }
+  function hideThinking() {
+    thinking.classList.remove('visible');
+  }
+
+  // ─── MENU PANEL ─────────────────────────────────────────────────────────────
+  // menuPanel is a single div, always the last child of M.
+  // setPage() is the ONE function that writes into it — clears first, always.
+  var menuPanel = document.createElement('div');
+  menuPanel.id = 'arous-menu-panel';
+  M.appendChild(menuPanel);
+
+  function setPage(pageFn) {
+    while (menuPanel.firstChild) menuPanel.removeChild(menuPanel.firstChild);
+    if (menuPanel.parentNode !== M || M.lastChild !== menuPanel) M.appendChild(menuPanel);
+    pageFn(menuPanel);
+    M.scrollTop = M.scrollHeight;
+  }
+
+  // ─── DOM HELPERS ─────────────────────────────────────────────────────────────
+  function el(tag, props) {
+    var e = document.createElement(tag);
+    Object.keys(props || {}).forEach(function(k) { e[k] = props[k]; });
+    return e;
+  }
+
+  function btnStack(items) {
+    var wrap = el('div', { className: 'arous-btn-stack' });
+    items.forEach(function(b) {
+      var btn = el('button', { className: 'arous-btn', textContent: b.label });
+      btn.onclick = function() {
+        trackEvent('button_click', b.label, '');
+        if (b.action) { b.action(); }
+        else { input.value = b.msg; sendMessage(b.fromButton || false); }
+      };
+      wrap.appendChild(btn);
+    });
+    return wrap;
+  }
+
+  function navRow(items) {
+    var row = el('div', { className: 'arous-nav-row' });
+    items.forEach(function(b) {
+      var btn = el('button', { className: 'arous-nav-btn', textContent: b.label });
+      btn.onclick = function() {
+        trackEvent('button_click', b.label, '');
+        if (b.action) { b.action(); }
+        else { input.value = b.msg; sendMessage(b.fromButton || false); }
+      };
+      row.appendChild(btn);
+    });
+    return row;
+  }
+
+  function contentBlock(text) { return el('div', { className: 'arous-menu-content', textContent: text }); }
+  function labelBlock(text)   { return el('div', { className: 'arous-menu-label',   textContent: text }); }
+  function titleBlock(text)   { return el('div', { className: 'arous-menu-title',    textContent: text }); }
+
+  // ─── FORM HELPERS (multi-step assessment questionnaires) ────────────────────
+  function formProgress(step, total) {
+    var wrap = el('div', { className: 'arous-form-progress' });
+    for (var i = 0; i < total; i++) {
+      wrap.appendChild(el('div', { className: 'arous-form-progress-dot' + (i <= step ? ' filled' : '') }));
+    }
+    return wrap;
+  }
+
+  function formStepLabel(text) { return el('div', { className: 'arous-form-step-label', textContent: text }); }
+
+  function formTextField(state, key, opts) {
+    opts = opts || {};
+    var wrap = el('div', {});
+    if (opts.label) wrap.appendChild(el('label', { className: 'arous-form-label', textContent: opts.label }));
+    var input = el('input', {
+      className: 'arous-form-input',
+      type: opts.type || 'text',
+      placeholder: opts.placeholder || '',
+      value: state[key] || ''
+    });
+    input.oninput = function() { state[key] = input.value; };
+    wrap.appendChild(input);
+    wrap._input = input;
+    return wrap;
+  }
+
+  function formTextareaField(state, key, opts) {
+    opts = opts || {};
+    var wrap = el('div', {});
+    if (opts.label) wrap.appendChild(el('label', { className: 'arous-form-label', textContent: opts.label }));
+    var ta = el('textarea', {
+      className: 'arous-form-textarea',
+      placeholder: opts.placeholder || '',
+      value: state[key] || ''
+    });
+    ta.oninput = function() { state[key] = ta.value; };
+    wrap.appendChild(ta);
+    return wrap;
+  }
+
+  // Checkbox group — state[key] holds an array of selected option strings.
+  // If allowOther, "Other" adds a free-text field stored at state[key + '_other'].
+  // exclusiveOptions (optional array) — selecting one of these clears all other
+  // selections in the group (and vice versa), e.g. "None of the above".
+  // Checkbox group — state[key] holds an array of selected option strings.
+  // Render order is: options, then "Other" (if allowOther), then any
+  // exclusiveOptions (e.g. "I don't know" / "None of the above") — selecting
+  // an exclusive option clears every other selection and vice versa.
+  // maxSelections (optional) caps how many non-exclusive options can be
+  // checked at once; further non-exclusive checkboxes disable once the cap
+  // is reached (exclusive options are never subject to the cap).
+  function formCheckboxGroup(state, key, options, allowOther, exclusiveOptions, maxSelections) {
+    if (!state[key]) state[key] = [];
+    var selected = state[key];
+    var wrap = el('div', { className: 'arous-form-check-group' });
+    var allEntries = [];
+    exclusiveOptions = exclusiveOptions || [];
+
+    function isExclusive(opt) { return exclusiveOptions.indexOf(opt) !== -1; }
+
+    function refreshDisabled() {
+      if (!maxSelections) return;
+      var count = selected.filter(function(s) { return !isExclusive(s); }).length;
+      var atCap = count >= maxSelections;
+      allEntries.forEach(function(entry) {
+        if (isExclusive(entry.opt)) return;
+        if (!entry.cb.checked) {
+          entry.cb.disabled = atCap;
+          entry.row.classList.toggle('arous-form-check-row-disabled', atCap);
+        } else {
+          entry.cb.disabled = false;
+          entry.row.classList.remove('arous-form-check-row-disabled');
+        }
+      });
+    }
+
+    function toggle(opt, cb) {
+      if (isExclusive(opt)) {
+        if (cb.checked) {
+          selected.length = 0;
+          selected.push(opt);
+          allEntries.forEach(function(other) {
+            if (other.opt !== opt) {
+              other.cb.checked = false;
+              if (other.otherInput) other.otherInput.style.display = 'none';
+            }
+          });
+        } else {
+          var idx = selected.indexOf(opt);
+          if (idx > -1) selected.splice(idx, 1);
+        }
+      } else {
+        if (cb.checked) {
+          exclusiveOptions.forEach(function(ex) {
+            var i = selected.indexOf(ex);
+            if (i > -1) selected.splice(i, 1);
+          });
+          allEntries.forEach(function(other) {
+            if (isExclusive(other.opt)) other.cb.checked = false;
+          });
+          if (selected.indexOf(opt) === -1) selected.push(opt);
+        } else {
+          var idx2 = selected.indexOf(opt);
+          if (idx2 > -1) selected.splice(idx2, 1);
+        }
+      }
+      refreshDisabled();
+    }
+
+    function addRow(opt, isOtherField) {
+      var row = el('label', { className: 'arous-form-check-row' });
+      var cb = el('input', { type: 'checkbox' });
+      cb.checked = selected.indexOf(opt) !== -1;
+      var otherInput = null;
+      if (isOtherField) {
+        otherInput = el('input', {
+          className: 'arous-form-input arous-form-other-input',
+          type: 'text',
+          placeholder: 'Please specify',
+          value: state[key + '_other'] || ''
+        });
+        otherInput.style.display = cb.checked ? 'block' : 'none';
+        otherInput.oninput = function() { state[key + '_other'] = otherInput.value; };
+      }
+      cb.onchange = function() {
+        toggle(opt, cb);
+        if (otherInput) otherInput.style.display = cb.checked ? 'block' : 'none';
+      };
+      row.appendChild(cb);
+      row.appendChild(el('span', { textContent: opt }));
+      wrap.appendChild(row);
+      if (otherInput) wrap.appendChild(otherInput);
+      allEntries.push({ opt: opt, cb: cb, otherInput: otherInput, row: row });
+    }
+
+    options.forEach(function(opt) { addRow(opt, false); });
+    if (allowOther) addRow('Other', true);
+    exclusiveOptions.forEach(function(opt) { addRow(opt, false); });
+
+    refreshDisabled();
+    return wrap;
+  }
+
+  // Radio group — state[key] holds the selected option string.
+  // If allowOther, "Other" adds a free-text field stored at state[key + '_other'].
+  function formRadioGroup(state, key, options, allowOther) {
+    var wrap = el('div', { className: 'arous-form-radio-group' });
+    var name = 'arous_' + key + '_' + Math.random().toString(36).slice(2);
+    var otherInput = null;
+
+    function selectOnly(opt) { state[key] = opt; if (otherInput) otherInput.style.display = (opt === 'Other') ? 'block' : 'none'; }
+
+    options.forEach(function(opt) {
+      var row = el('label', { className: 'arous-form-radio-row' });
+      var rb = el('input', { type: 'radio', name: name });
+      rb.checked = state[key] === opt;
+      rb.onchange = function() { selectOnly(opt); };
+      row.appendChild(rb);
+      row.appendChild(el('span', { textContent: opt }));
+      wrap.appendChild(row);
+    });
+
+    if (allowOther) {
+      var row = el('label', { className: 'arous-form-radio-row' });
+      var rb = el('input', { type: 'radio', name: name });
+      rb.checked = state[key] === 'Other';
+      otherInput = el('input', {
+        className: 'arous-form-input arous-form-other-input',
+        type: 'text',
+        placeholder: 'Please specify',
+        value: state[key + '_other'] || ''
+      });
+      otherInput.style.display = rb.checked ? 'block' : 'none';
+      otherInput.oninput = function() { state[key + '_other'] = otherInput.value; };
+      rb.onchange = function() { selectOnly('Other'); };
+      row.appendChild(rb);
+      row.appendChild(el('span', { textContent: 'Other' }));
+      wrap.appendChild(row);
+      wrap.appendChild(otherInput);
+    }
+
+    return wrap;
+  }
+
+  function formErrorBlock(text) { return el('div', { className: 'arous-form-error', textContent: text }); }
+
+  // Submits a completed assessment form to the n8n webhook as structured JSON
+  // (distinct from the free-text chat payload). Daniel: route on body.formType
+  // in n8n with a Switch node to handle Service Business Review vs
+  // Business Operations submissions separately.
+  async function submitAssessmentForm(formType, data) {
+    return fetch(FORM_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ formType: formType, sessionId: SESSION_ID, submittedAt: new Date().toISOString(), data: data })
+    });
+  }
+
+  // Generic single-step-of-a-wizard renderer. Handles progress dots, title,
+  // intro copy, arbitrary fields, inline validation errors, and Next/Back nav.
+  function buildFormStep(opts) {
+    return function(p) {
+      p.appendChild(formProgress(opts.step, opts.total));
+      if (opts.title) p.appendChild(titleBlock(opts.title));
+      if (opts.intro) p.appendChild(contentBlock(opts.intro));
+
+      var fieldsContainer = el('div', {});
+      opts.buildFields(fieldsContainer);
+      p.appendChild(fieldsContainer);
+
+      var errorHolder = el('div', {});
+      p.appendChild(errorHolder);
+
+      p.appendChild(btnStack([
+        { label: opts.nextLabel || 'Next →', action: function() {
+            var err = opts.validate ? opts.validate() : null;
+            if (err) {
+              errorHolder.innerHTML = '';
+              errorHolder.appendChild(formErrorBlock(err));
+              return;
+            }
+            opts.onNext();
+          }
+        }
+      ]));
+
+      var navItems = [];
+      if (opts.onBack) navItems.push({ label: '⬅ Back', action: opts.onBack });
+      navItems.push({ label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } });
+      p.appendChild(navRow(navItems));
+    };
+  }
+
+
+
+  // ─── HELPERS ──────────────────────────────────────────────────────────────
+  function renderText(t) {
+    var s = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    s = s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    s = s.replace(/(\+?1?\s?[\(]?\d{3}[\)]?[\s\-\.]?\d{3}[\s\-\.]?\d{4})/g, function (m) {
+      return '<a href="tel:' + m.replace(/\D/g, '') + '">' + m + '</a>';
+    });
+    return s;
+  }
+
+  function addMsg(text, role) {
+    var div = document.createElement('div');
+    div.className = role === 'bot' ? 'arous-bot' : 'arous-user';
+    if (role === 'bot') div.innerHTML = renderText(text);
+    else div.textContent = text;
+    M.insertBefore(div, menuPanel);
+    M.scrollTop = M.scrollHeight;
+    return div;
+  }
+
+  // ─── PAGE BUILDERS ───────────────────────────────────────────────────────────
+
+  function pageMainMenu() {
+    return function(p) {
+      p.appendChild(btnStack([
+        { label: '👋 About Arous',         msg: 'About Arous',   fromButton: true },
+        { label: '🎯 Complimentary Assessments', action: function(){ setPage(pageAssessmentMenu()); } },
+        { label: '🎓 Training',            action: function(){ setPage(pageTrainingMenu()); } },
+        { label: '🎥 Daniel in Under a Minute', action: function(){ setPage(pageDanielVideos()); } },
+        { label: '🛠 Services',            action: function(){ setPage(pageServicesMenu()); } },
+        { label: '💬 Talk to Daniel',      action: function(){ setPage(pageTalkToDaniel()); } },
+      ]));
+    };
+  }
+
+  function pageDanielVideos() {
+    return function(p) {
+      p.appendChild(titleBlock('🎥 Daniel in Under a Minute'));
+      p.appendChild(labelBlock('Quick videos on tools, process, and running a business — loading...'));
+      p.appendChild(navRow([
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+
+      (async function() {
+        try {
+          var response = await fetch('https://raw.githubusercontent.com/gonzo4745/arous-bot/main/videos.json');
+          if (!response.ok) throw new Error('Unable to load videos.');
+          var videos = await response.json();
+
+          setPage(function(p2) {
+            p2.appendChild(titleBlock('🎥 Daniel in Under a Minute'));
+            p2.appendChild(labelBlock('Quick videos on tools, process, and running a business.'));
+            var stack = el('div', { className: 'arous-btn-stack' });
+            videos.forEach(function(video) {
+              var card = el('div', { className: 'arous-video-card' });
+              card.appendChild(el('div', { className: 'arous-video-card-title', textContent: '🎥 ' + video.title }));
+              card.onclick = function(){ trackEvent('button_click', video.title, 'daniel-videos'); openVideoModal(video); };
+              stack.appendChild(card);
+            });
+            p2.appendChild(stack);
+            p2.appendChild(navRow([
+              { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+            ]));
+          });
+        } catch (error) {
+          addMsg("Sorry, Daniel's videos are unavailable right now.", 'bot');
+          setPage(pageMainMenu());
+        }
+      })();
+    };
+  }
+
+  function pageTrainingMenu() {
+    return function(p) {
+      p.appendChild(titleBlock('Free AI Training'));
+      p.appendChild(labelBlock('Learn AI at your own pace — more courses coming soon.'));
+      p.appendChild(contentBlock('Two standalone programs to help you understand and apply AI:\n\n🧠 AI Foundations — an introduction to AI, its practical applications, and how it can be used in everyday business activities.\n\n🚀 AI Practitioner — a more advanced program focused on applying AI to practical business challenges and building hands-on AI skills.\n\nArous AI also provides customized training as part of its AI implementation and consulting engagements. Contact Daniel to learn more.'));
+      p.appendChild(btnStack([
+        { label: '🧠 AI Foundations (Free)', action: function(){ window.location.href = '/training/ai-foundations'; } },
+        { label: '🚀 AI Practitioner (Free - Limited Time)', action: function(){ window.location.href = '/training/practitioner'; } },
+      ]));
+      p.appendChild(navRow([
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageAssessmentMenu() {
+    return function(p) {
+      p.appendChild(labelBlock('Which assessment are you looking for?'));
+      p.appendChild(contentBlock('Both are complimentary and start with understanding how your business actually operates.\n\n\u2022 Service Business Review \u2014 for local service businesses looking to see where calls, leads, and follow-up may be slipping through the cracks.\n\n\u2022 Business Operations Assessment \u2014 for growing organizations and leadership teams evaluating operational efficiency and practical AI adoption.'));
+      p.appendChild(btnStack([
+        { label: '🏠 Complimentary Service Business Review', action: function(){ setPage(pageServiceBusinessReview()); } },
+        { label: '🏢 Business Operations Assessment',         action: function(){ setPage(pageBusinessOperations()); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  // ─── SERVICE BUSINESS REVIEW — multi-step questionnaire ──────────────────
+  var sbrForm = {};
+
+  function pageServiceBusinessReview() {
+    sbrForm = {};
+    return pageSBRStep0();
+  }
+
+  function pageSBRStep0() {
+    return buildFormStep({
+      step: 0, total: 8,
+      title: 'Complimentary Service Business Review',
+      intro: 'Answer a few quick questions so Daniel can understand how your business operates today \u2014 your calls, scheduling, follow-up, and the tools you already use \u2014 and identify where opportunities may be slipping through the cracks.\n\nNo new software is required to get started.',
+      buildFields: function(container) {
+        container.appendChild(formTextField(sbrForm, 'companyName', { label: 'Company Name' }));
+        container.appendChild(formTextField(sbrForm, 'yourName', { label: 'Your Name' }));
+        container.appendChild(formTextField(sbrForm, 'email', { label: 'Email Address', type: 'email' }));
+      },
+      validate: function() {
+        if (!sbrForm.companyName || !sbrForm.companyName.trim()) return 'Please enter your company name.';
+        if (!sbrForm.yourName || !sbrForm.yourName.trim()) return 'Please enter your name.';
+        if (!sbrForm.email || sbrForm.email.indexOf('@') === -1) return 'Please enter a valid email address.';
+        return null;
+      },
+      onNext: function() { setPage(pageSBRStep1()); },
+      onBack: function() { setPage(pageAssessmentMenu()); }
+    });
+  }
+
+  function pageSBRStep1() {
+    return buildFormStep({
+      step: 1, total: 8,
+      title: 'What are your biggest challenges today?',
+      intro: 'Select all that apply.',
+      buildFields: function(container) {
+        container.appendChild(formCheckboxGroup(sbrForm, 'q1', [
+          'Missing phone calls', 'Scheduling appointments', 'Customer follow-up',
+          'Too many repetitive office tasks', 'Customer communication', 'Getting new customers',
+          'Online presence', 'Reviews & reputation'
+        ], true));
+      },
+      validate: function() {
+        if (!sbrForm.q1 || sbrForm.q1.length === 0) return 'Please select at least one option.';
+        if (sbrForm.q1.indexOf('Other') !== -1 && (!sbrForm.q1_other || !sbrForm.q1_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageSBRStep2()); },
+      onBack: function() { setPage(pageSBRStep0()); }
+    });
+  }
+
+  function pageSBRStep2() {
+    return buildFormStep({
+      step: 2, total: 8,
+      title: 'How do customers primarily contact your business?',
+      intro: 'Select all that apply.',
+      buildFields: function(container) {
+        container.appendChild(formCheckboxGroup(sbrForm, 'q2', [
+          'Phone', 'Website', 'Google Business Profile', 'Facebook', 'Email', 'Text Message', 'Walk-ins'
+        ], true));
+      },
+      validate: function() {
+        if (!sbrForm.q2 || sbrForm.q2.length === 0) return 'Please select at least one option.';
+        if (sbrForm.q2.indexOf('Other') !== -1 && (!sbrForm.q2_other || !sbrForm.q2_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageSBRStep3()); },
+      onBack: function() { setPage(pageSBRStep1()); }
+    });
+  }
+
+  function pageSBRStep3() {
+    return buildFormStep({
+      step: 3, total: 8,
+      title: 'If you could improve ONE thing in your business tomorrow, what would it be?',
+      buildFields: function(container) {
+        container.appendChild(formRadioGroup(sbrForm, 'q3', [
+          'Never miss another customer inquiry', 'Save employee time', 'Get more customers',
+          'Improve customer communication', 'Automate repetitive work', 'Improve scheduling'
+        ], true));
+      },
+      validate: function() {
+        if (!sbrForm.q3) return 'Please choose one option.';
+        if (sbrForm.q3 === 'Other' && (!sbrForm.q3_other || !sbrForm.q3_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageSBRStep4()); },
+      onBack: function() { setPage(pageSBRStep2()); }
+    });
+  }
+
+  function pageSBRStep4() {
+    return buildFormStep({
+      step: 4, total: 8,
+      title: 'Which of the following tools does your business currently use?',
+      intro: 'Select all that apply.',
+      buildFields: function(container) {
+        container.appendChild(formCheckboxGroup(sbrForm, 'q4', [
+          'Online scheduling / booking', 'CRM / Customer database', 'Website chat', 'Email marketing',
+          'Text messaging with customers', 'AI tools (ChatGPT, Copilot, Gemini, etc.)'
+        ], true, ['I don\u2019t know', 'None of the above']));
+      },
+      validate: function() {
+        if (!sbrForm.q4 || sbrForm.q4.length === 0) return 'Please select at least one option.';
+        if (sbrForm.q4.indexOf('Other') !== -1 && (!sbrForm.q4_other || !sbrForm.q4_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageSBRStep5()); },
+      onBack: function() { setPage(pageSBRStep3()); }
+    });
+  }
+
+  function pageSBRStep5() {
+    return buildFormStep({
+      step: 5, total: 8,
+      title: 'Approximately how many new customer inquiries does your business receive each week?',
+      intro: 'Calls, texts, emails, website inquiries, etc.',
+      buildFields: function(container) {
+        container.appendChild(formRadioGroup(sbrForm, 'q5', [
+          'Under 10', '10\u201330', '31\u201350', 'More than 50', 'I\u2019m not sure'
+        ], false));
+      },
+      validate: function() {
+        if (!sbrForm.q5) return 'Please choose one option.';
+        return null;
+      },
+      onNext: function() { setPage(pageSBRStep6()); },
+      onBack: function() { setPage(pageSBRStep4()); }
+    });
+  }
+
+  function pageSBRStep6() {
+    return buildFormStep({
+      step: 6, total: 8,
+      title: 'How would you describe your current business?',
+      buildFields: function(container) {
+        container.appendChild(formRadioGroup(sbrForm, 'q6', [
+          'I\u2019m happy with where we are.', 'I\u2019d like steady growth.', 'We\u2019re actively trying to grow.',
+          'We\u2019re growing faster than our processes can handle.', 'I\u2019m not sure.'
+        ], false));
+      },
+      validate: function() {
+        if (!sbrForm.q6) return 'Please choose one option.';
+        return null;
+      },
+      onNext: function() { setPage(pageSBRStep7()); },
+      onBack: function() { setPage(pageSBRStep5()); }
+    });
+  }
+
+  function pageSBRStep7() {
+    return function(p) {
+      p.appendChild(formProgress(7, 8));
+      p.appendChild(titleBlock('Is there anything else you\u2019d like Daniel to know about your business?'));
+      p.appendChild(contentBlock('Optional.'));
+      p.appendChild(formTextareaField(sbrForm, 'q7', { placeholder: 'Anything else you\u2019d like to share...' }));
+
+      var errorHolder = el('div', {});
+      p.appendChild(errorHolder);
+
+      p.appendChild(btnStack([
+        { label: 'Submit Complimentary Review', action: function() {
+            setPage(function(pp) {
+              pp.appendChild(formProgress(7, 8));
+              pp.appendChild(contentBlock('Submitting your review...'));
+            });
+            submitAssessmentForm('ServiceBusinessReview', sbrForm)
+              .then(function() { setPage(pageSBRConfirmation()); })
+              .catch(function() { setPage(pageSBRError()); });
+          }
+        }
+      ]));
+      p.appendChild(navRow([
+        { label: '⬅ Back',      action: function(){ setPage(pageSBRStep6()); } },
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageSBRConfirmation() {
+    return function(p) {
+      p.appendChild(titleBlock('Thank you!'));
+      p.appendChild(contentBlock('Your Complimentary Service Business Review has been submitted.\n\nDaniel will personally review your responses and reach out to share what he finds \u2014 no commitment needed.'));
+      p.appendChild(navRow([
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageSBRError() {
+    return function(p) {
+      p.appendChild(titleBlock('Something went wrong'));
+      p.appendChild(contentBlock('We weren\u2019t able to submit your review. Please try again, or reach out to Daniel directly.'));
+      p.appendChild(btnStack([
+        { label: 'Try Again', action: function(){ setPage(pageSBRStep7()); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '💬 Talk to Daniel', action: function(){ setPage(pageTalkToDaniel()); } },
+        { label: '🏠 Main Menu',      action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageServicesMenu() {
+    return function(p) {
+      p.appendChild(contentBlock('What can we help you with today?\n\nArous AI helps local service businesses and growing organizations improve operations, evaluate AI opportunities, and implement practical solutions \u2014 serving Middle Tennessee and organizations remotely nationwide.\n\nEvery engagement starts with understanding how your business actually operates. Sometimes the answer is AI. Sometimes it isn\'t.\n\nSelect one of the services below to learn more.'));
+      p.appendChild(btnStack([
+        { label: '📊 Comprehensive Business Assessment', action: function(){ setPage(pageComprehensiveBusinessAssessment()); } },
+        { label: '🤖 AI Website Concierge',           action: function(){ setPage(pageAIConcierge()); } },
+        { label: '\u26A1 AI Solutions & Implementations',  action: function(){ setPage(pageAISolutionsMenu()); } },
+        { label: '❓ FAQs',                            action: function(){ setPage(pageFAQs()); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  // Separate service for visitors who already want a comprehensive assessment
+  // and wish to book directly. Reached only from the Services menu; opens
+  // Calendly directly. Title corrected in v37 (was "Business Operations
+  // Assessment", which collided with the complimentary assessment name).
+  // Content, Calendly routing, and nav are otherwise unchanged.
+  function pageComprehensiveBusinessAssessment() {
+    return function(p) {
+      p.appendChild(titleBlock('Comprehensive Business Assessment'));
+      p.appendChild(contentBlock('Designed for growing organizations and leadership teams seeking greater operational efficiency, sustainable growth, and practical AI adoption.\n\nWe start by understanding how your business actually operates \u2014 your workflows, customer experience, technology, and organizational readiness \u2014 to identify where the real opportunities are.\n\nThis assessment includes an AI Readiness Evaluation to determine where AI can realistically provide measurable value within your organization.\n\nDeliverables include:\n\u2022 Executive Summary  \u2022 Operational Findings\n\u2022 AI Readiness Evaluation\n\u2022 Prioritized Recommendations  \u2022 Action Plan'));
+      p.appendChild(btnStack([
+        { label: '📅 Schedule This Assessment', action: function(){ openCalendly(); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '\u2B05 Services',   action: function(){ setPage(pageServicesMenu()); } },
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageLostOpportunities() {
+    return function(p) {
+      p.appendChild(titleBlock('Lost Opportunities Assessment'));
+      p.appendChild(contentBlock('Designed for service-based businesses looking to identify where customer inquiries, leads, and revenue may be slipping through the cracks.\n\nWe evaluate your customer touchpoints, response processes, lead capture, follow-up, and communication to identify practical opportunities for improvement \u2014 starting with the tools and processes you already have.\n\nDeliverables include:\n\u2022 Executive Summary  \u2022 Key Findings\n\u2022 Prioritized Recommendations  \u2022 Action Plan'));
+      p.appendChild(btnStack([
+        { label: '📅 Schedule This Assessment', action: function(){ openCalendly(); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '\u2B05 Services',   action: function(){ setPage(pageServicesMenu()); } },
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  // ─── BUSINESS OPERATIONS ASSESSMENT — multi-step questionnaire (FINAL) ───
+  var boaForm = {};
+
+  function pageBusinessOperations() {
+    boaForm = {};
+    return pageBOAStep0();
+  }
+
+  function pageBOAStep0() {
+    return buildFormStep({
+      step: 0, total: 9,
+      title: 'Business Operations Assessment',
+      intro: 'Answer a few quick questions so Daniel can understand how your organization operates today \u2014 its workflows, customer experience, technology, and readiness for AI \u2014 and identify where operational improvements and AI can realistically deliver value.',
+      buildFields: function(container) {
+        container.appendChild(formTextField(boaForm, 'companyName', { label: 'Company Name' }));
+        container.appendChild(formTextField(boaForm, 'yourName', { label: 'Your Name' }));
+        container.appendChild(formTextField(boaForm, 'email', { label: 'Email Address', type: 'email' }));
+      },
+      validate: function() {
+        if (!boaForm.companyName || !boaForm.companyName.trim()) return 'Please enter your company name.';
+        if (!boaForm.yourName || !boaForm.yourName.trim()) return 'Please enter your name.';
+        if (!boaForm.email || boaForm.email.indexOf('@') === -1) return 'Please enter a valid email address.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep1()); },
+      onBack: function() { setPage(pageAssessmentMenu()); },
+      nextLabel: 'Continue \u2192'
+    });
+  }
+
+  function pageBOAStep1() {
+    return buildFormStep({
+      step: 1, total: 9,
+      title: 'What are your biggest operational challenges today?',
+      intro: 'Select all that apply.',
+      buildFields: function(container) {
+        container.appendChild(formCheckboxGroup(boaForm, 'q1', [
+          'Manual processes', 'Repetitive administrative work', 'Workflow bottlenecks',
+          'Disconnected systems', 'Employee productivity', 'Data visibility & reporting',
+          'Communication & collaboration', 'Resource constraints'
+        ], true));
+      },
+      validate: function() {
+        if (!boaForm.q1 || boaForm.q1.length === 0) return 'Please select at least one option.';
+        if (boaForm.q1.indexOf('Other') !== -1 && (!boaForm.q1_other || !boaForm.q1_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep2()); },
+      onBack: function() { setPage(pageBOAStep0()); }
+    });
+  }
+
+  function pageBOAStep2() {
+    return buildFormStep({
+      step: 2, total: 9,
+      title: 'Which areas present the greatest opportunity for improvement?',
+      intro: 'Select all that apply.',
+      buildFields: function(container) {
+        container.appendChild(formCheckboxGroup(boaForm, 'q2', [
+          'Business operations', 'Customer experience', 'Process automation', 'AI readiness',
+          'Reporting & analytics', 'Growth & scalability', 'Compliance / Governance'
+        ], true));
+      },
+      validate: function() {
+        if (!boaForm.q2 || boaForm.q2.length === 0) return 'Please select at least one option.';
+        if (boaForm.q2.indexOf('Other') !== -1 && (!boaForm.q2_other || !boaForm.q2_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep3()); },
+      onBack: function() { setPage(pageBOAStep1()); }
+    });
+  }
+
+  function pageBOAStep3() {
+    return buildFormStep({
+      step: 3, total: 9,
+      title: 'Which of the following does your organization currently use?',
+      intro: 'Select all that apply.',
+      buildFields: function(container) {
+        container.appendChild(formCheckboxGroup(boaForm, 'q3', [
+          'CRM', 'ERP / Business Management Software', 'Microsoft 365', 'Google Workspace',
+          'Workflow automation', 'AI tools (ChatGPT, Copilot, Gemini, etc.)'
+        ], true, ['I don\u2019t know', 'None of the above']));
+      },
+      validate: function() {
+        if (!boaForm.q3 || boaForm.q3.length === 0) return 'Please select at least one option.';
+        if (boaForm.q3.indexOf('Other') !== -1 && (!boaForm.q3_other || !boaForm.q3_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep4()); },
+      onBack: function() { setPage(pageBOAStep2()); }
+    });
+  }
+
+  function pageBOAStep4() {
+    return buildFormStep({
+      step: 4, total: 9,
+      title: 'Which best describes your organization\u2019s current AI journey?',
+      buildFields: function(container) {
+        container.appendChild(formRadioGroup(boaForm, 'q4', [
+          'We are actively using AI across the business.', 'We are experimenting with AI.',
+          'We are evaluating AI opportunities.', 'We have discussed AI but haven\u2019t started.',
+          'We have not explored AI yet.', 'I\u2019m not sure.'
+        ], false));
+      },
+      validate: function() {
+        if (!boaForm.q4) return 'Please choose one option.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep5()); },
+      onBack: function() { setPage(pageBOAStep3()); }
+    });
+  }
+
+  function pageBOAStep5() {
+    return buildFormStep({
+      step: 5, total: 9,
+      title: 'What are your organization\u2019s primary goals over the next 3\u201312 months?',
+      intro: 'Select up to 3.',
+      buildFields: function(container) {
+        container.appendChild(formCheckboxGroup(boaForm, 'q5', [
+          'Improve operational efficiency', 'Reduce costs', 'Increase productivity', 'Grow revenue',
+          'Improve customer experience', 'Scale operations', 'Develop an AI strategy', 'Digital transformation'
+        ], true, [], 3));
+      },
+      validate: function() {
+        if (!boaForm.q5 || boaForm.q5.length === 0) return 'Please select at least one option.';
+        if (boaForm.q5.indexOf('Other') !== -1 && (!boaForm.q5_other || !boaForm.q5_other.trim())) return 'Please specify your "Other" answer.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep6()); },
+      onBack: function() { setPage(pageBOAStep4()); }
+    });
+  }
+
+  function pageBOAStep6() {
+    return buildFormStep({
+      step: 6, total: 9,
+      title: 'How would you describe your organization\u2019s approach to change?',
+      buildFields: function(container) {
+        container.appendChild(formRadioGroup(boaForm, 'q6', [
+          'We proactively embrace change and innovation.', 'We adopt change when there is a clear business need.',
+          'We move cautiously and deliberately.', 'We typically react after problems arise.', 'I\u2019m not sure.'
+        ], false));
+      },
+      validate: function() {
+        if (!boaForm.q6) return 'Please choose one option.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep7()); },
+      onBack: function() { setPage(pageBOAStep5()); }
+    });
+  }
+
+  function pageBOAStep7() {
+    return buildFormStep({
+      step: 7, total: 9,
+      title: 'Does your organization currently have an AI strategy or roadmap?',
+      buildFields: function(container) {
+        container.appendChild(formRadioGroup(boaForm, 'q7', [
+          'Yes, it\u2019s actively being executed.', 'We\u2019re developing one.',
+          'We\u2019ve discussed it but don\u2019t have one.', 'No.', 'I\u2019m not sure.'
+        ], false));
+      },
+      validate: function() {
+        if (!boaForm.q7) return 'Please choose one option.';
+        return null;
+      },
+      onNext: function() { setPage(pageBOAStep8()); },
+      onBack: function() { setPage(pageBOAStep6()); }
+    });
+  }
+
+  function pageBOAStep8() {
+    return function(p) {
+      p.appendChild(formProgress(8, 9));
+      p.appendChild(titleBlock('Is there anything else you\u2019d like Daniel to know about your organization?'));
+      p.appendChild(contentBlock('Optional.'));
+      p.appendChild(formTextareaField(boaForm, 'q8', { placeholder: 'Anything else you\u2019d like to share...' }));
+
+      var errorHolder = el('div', {});
+      p.appendChild(errorHolder);
+
+      p.appendChild(btnStack([
+        { label: 'Submit Business Operations Assessment', action: function() {
+            setPage(function(pp) {
+              pp.appendChild(formProgress(8, 9));
+              pp.appendChild(contentBlock('Submitting your assessment...'));
+            });
+            submitAssessmentForm('BusinessOperationsAssessment', boaForm)
+              .then(function() { setPage(pageBOAConfirmation()); })
+              .catch(function() { setPage(pageBOAError()); });
+          }
+        }
+      ]));
+      p.appendChild(navRow([
+        { label: '⬅ Back',      action: function(){ setPage(pageBOAStep7()); } },
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageBOAConfirmation() {
+    return function(p) {
+      p.appendChild(titleBlock('Thank you for completing your Business Operations Assessment.'));
+      p.appendChild(contentBlock('Daniel will personally review your responses.\n\nIf you\u2019d like to continue now, you can schedule your complimentary Business Operations Assessment below.\n\nOtherwise, Daniel will review your assessment and contact you to discuss the next steps.'));
+      p.appendChild(btnStack([
+        { label: '📅 Schedule Business Operations Assessment', action: function(){ openCalendly(); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '🏠 Return to Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageBOAError() {
+    return function(p) {
+      p.appendChild(titleBlock('Something went wrong'));
+      p.appendChild(contentBlock('We weren\u2019t able to submit your assessment. Please try again, or reach out to Daniel directly.'));
+      p.appendChild(btnStack([
+        { label: 'Try Again', action: function(){ setPage(pageBOAStep8()); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '💬 Talk to Daniel', action: function(){ setPage(pageTalkToDaniel()); } },
+        { label: '🏠 Main Menu',      action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageAIConcierge() {
+    return function(p) {
+      p.appendChild(titleBlock('AI Website Concierge'));
+      p.appendChild(contentBlock('Provide your website visitors with an AI-powered assistant that answers questions, captures leads, and helps customers find the information they need 24/7.\n\nYour concierge is customized to your business, services, FAQs, and brand voice, and can support scheduling requests and, where supported, pass lead information to your CRM. Specific capabilities depend on your existing tools and are confirmed before implementation.'));
+      p.appendChild(navRow([
+        { label: '💬 Talk to Daniel', action: function(){ setPage(pageTalkToDaniel({ label: '\u2B05 Services', action: function(){ setPage(pageServicesMenu()); } })); } },
+        { label: '\u2B05 Services',          action: function(){ setPage(pageServicesMenu()); } },
+        { label: '🏠 Main Menu',      action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageSEO() {
+    return function(p) {
+      p.appendChild(titleBlock('Website SEO & AI Search Optimization'));
+      p.appendChild(contentBlock('Improve your online visibility through technical SEO, on-page optimization, local search optimization, and content strategies that help customers find your business in both traditional search engines and emerging AI-powered search experiences.\n\nTalk to Daniel to request an evaluation of your website\'s visibility.'));
+      p.appendChild(navRow([
+        { label: '💬 Talk to Daniel', action: function(){ setPage(pageTalkToDaniel({ label: '⬅ AI Solutions', action: function(){ setPage(pageAISolutionsMenu()); } })); } },
+        { label: '⬅ AI Solutions', action: function(){ setPage(pageAISolutionsMenu()); } },
+        { label: '🏠 Main Menu',   action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageAISolutionsMenu() {
+    return function(p) {
+      p.appendChild(contentBlock('Every business operates differently.\n\nArous AI starts by understanding your existing operations, systems, and challenges \u2014 then designs and implements practical AI solutions that build on the tools you already use, rather than adding software you may not need.\n\nSelect one of the solutions below to learn more.'));
+      p.appendChild(btnStack([
+        { label: '\u2699\uFE0F Workflow Automation',     action: function(){ setPage(pageAISolution('Workflow Automation',     'Reduce repetitive work and friction between your people, systems, and customer communications.\n\nArous AI automates routine processes such as customer communication workflows, lead capture, follow-up, scheduling assistance, and other business-specific tasks — working with the tools you already use wherever possible.\n\nThe goal isn\'t to replace employees. It\'s to help your team operate more efficiently.')); } },
+        { label: '📆 AI Scheduling Assistant', action: function(){ setPage(pageAISolution('AI Scheduling Assistant', 'Streamline appointment scheduling through conversational AI and automated workflows.\n\nThe assistant can help customers request appointments and, when connected to a supported scheduling platform, check available times and guide them through the booking process. Depending on your existing system and available integrations, it may also be configured to create appointments, send confirmations, and support follow-up communications.\n\nWe work with your existing scheduling tools whenever possible rather than requiring a new system. Specific capabilities and integrations are confirmed for your system before implementation.')); } },
+        { label: '🔗 CRM Integrations',        action: function(){ setPage(pageAISolution('CRM Integrations',        'Connect your existing CRM with AI assistants, customer communication tools, and business workflows.\n\nDepending on your CRM platform, integrations may support lead capture, customer information updates, follow-up notifications, appointment information, and synchronization between systems — reducing manual data entry and helping your team respond more efficiently.\n\nWe evaluate your current CRM, processes, and requirements first. The goal is to help you get more value from the technology you already use, not replace it.\n\nSpecific capabilities depend on your platform and its available interfaces.')); } },
+        { label: '📲 Missed Call Text-Back',   action: function(){ setPage(pageAISolution('Missed Call Text-Back',   'When a call goes unanswered, Arous AI can automatically send a personalized text message to the caller — so your business can acknowledge the inquiry, collect information, and start follow-up even when your team is busy.\n\nMissed Call Text-Back responds by text message. Arous Voice, by contrast, answers the phone conversation itself.\n\nAvailability and implementation depend on your existing telephone and messaging systems.')); } },
+        { label: '💬 AI SMS Assistant',        action: function(){ setPage(pageAISolution('AI SMS Assistant',        'Two-way, conversational text messaging that goes beyond a basic auto-reply. The AI SMS Assistant can answer common questions, collect information, and help move customer inquiries toward the appropriate next step.\n\nDepending on your messaging platform and supported integrations, it may also support lead capture, follow-up communications, and coordination with other business systems. It can work on its own or complement Arous Voice and Missed Call Text-Back.\n\nSpecific capabilities depend on your messaging platform, business requirements, and configured integrations.')); } },
+        { label: '\uD83C\uDFA4 Arous Voice - AI Receptionist', action: function(){ setPage(pageAISolution('Arous Voice - AI Receptionist', 'Your AI Receptionist. Always Ready to Answer.\n\nNever miss a call. Never miss an opportunity.\n\nArous Voice is an AI-powered telephone receptionist that answers incoming business calls and holds natural conversations with callers — answering questions, explaining your services, collecting caller information, qualifying leads, taking messages, and assisting with scheduling inquiries.\n\nIt can be customized for your industry, including HVAC, plumbing, electrical, landscaping, and other service businesses, and can work alongside your existing phone system. Integrations with supported scheduling platforms, CRMs, and business workflows are evaluated for your specific setup.\n\nTalk to Daniel to arrange a demonstration or consultation.')); } },
+        { label: '🧠 Custom AI Solutions',     action: function(){ setPage(pageAISolution('Custom AI Solutions',     'Every business operates differently, and sometimes an off-the-shelf solution simply doesn\'t fit.\n\nArous AI designs and implements custom AI solutions around your specific challenges, processes, and existing technology — from a specialized conversational AI assistant or intelligent workflow automation to a custom business application or a solution that connects multiple systems.\n\nWe start by understanding your business end to end and evaluating your current tools and workflows before deciding where AI, automation, or custom development can add real value. The goal isn\'t technology for its own sake — it\'s solving real business problems.\n\nDescribe your challenge to Daniel to see what\'s possible.')); } },
+        { label: '🔍 Website SEO & AI Search Optimization', action: function(){ setPage(pageSEO()); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '\u2B05 Services',   action: function(){ setPage(pageServicesMenu()); } },
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  var faqAnswers = {
+    'what_happens': 'We begin by understanding how your business actually operates — your current processes, existing systems, workflows, and the challenges you\'re facing. Sometimes the answer is AI. Sometimes it isn\'t.\n\nArous AI offers two complimentary assessments. The Complimentary Service Business Review is designed for local service businesses and looks at missed calls, response times, lead capture, follow-up, and communication. The Business Operations Assessment is designed for growing and mid-sized organizations and looks at operations, workflows, customer experience, technology, and AI readiness.\n\nEach one starts with a short questionnaire in the Concierge. Daniel personally reviews your responses and follows up with you. After submitting the Business Operations Assessment, you can also optionally book a follow-up appointment right away.\n\nIf you already know you want a comprehensive assessment, the Comprehensive Business Assessment under Services lets you book directly.\n\nOur recommendations are practical and tailored to your business, whether the right solution involves improving existing processes, connecting systems, or implementing AI and automation.',
+    'how_long': 'Every engagement begins with an initial 30-minute consultation to understand your business, discuss your challenges, and determine the appropriate next steps.\n\nOur complimentary assessments begin with a short online questionnaire. Daniel personally reviews your responses and follows up to discuss his initial observations and potential opportunities.\n\nVisitors completing the complimentary Business Operations Assessment can also schedule their 30-minute consultation directly through Calendly after submitting their questionnaire.\n\nFor businesses seeking a deeper evaluation, the Comprehensive Business Assessment may involve several days of onsite or remote work, depending on the size of the organization, operational complexity, and agreed scope.\n\nDaniel will discuss the expected timeline and deliverables with you during the initial consultation.',
+    'what_issues': 'Many businesses have hidden inefficiencies and missed opportunities they don\'t even realize exist.\n\nAt Arous AI, we look at how your business operates from end to end, including how customers find you, how inquiries are handled, how information moves between employees and systems, and how work gets completed.\n\nOur assessments can uncover missed customer inquiries, lost revenue opportunities, inefficient workflows, repetitive manual tasks, disconnected systems, communication gaps, scheduling bottlenecks, and underutilized technology.\n\nWe also evaluate where AI and automation could improve operations, enhance customer experiences, reduce manual effort, and support business growth.\n\nFor larger organizations, we examine AI readiness, data quality, technology integration, governance considerations, and operational risks that may affect successful AI adoption.\n\nSometimes the biggest opportunity isn\'t adding new technology. It\'s improving an existing process, connecting systems that don\'t communicate, or making better use of tools you already own.\n\nThe goal is to identify what\'s holding your business back, uncover opportunities you may be missing, and develop practical recommendations that deliver measurable business value.',
+    'what_types': 'Arous AI works with businesses of all sizes, from local service providers to growing organizations and established companies looking to improve operations, modernize customer engagement, and implement practical AI solutions.\n\nFor service businesses such as HVAC, plumbing, electrical, roofing, landscaping, salons, spas, and professional services, we help address everyday challenges like missed calls, lost leads, customer follow-up, scheduling, and repetitive administrative work.\n\nFor growing and mid-sized organizations, we focus on operational efficiency, workflow optimization, system integrations, AI readiness, and identifying opportunities to improve how people, processes, and technology work together.\n\nWhether you\'re a small business owner looking to capture more opportunities or a leadership team evaluating AI across your organization, our approach starts with understanding how your business operates today.\n\nWe don\'t believe in forcing the same technology on every business. We identify your specific challenges, evaluate your existing systems and processes, and design practical solutions around your goals.\n\nIf your business has customers, employees, workflows, or systems that could work better together, there\'s an opportunity worth exploring.',
+    'software': 'Not necessarily. In fact, one of the first things we look at is whether you\'re getting the most out of the technology you already own.\n\nMany businesses invest in software, CRM platforms, scheduling tools, and other systems without fully utilizing their capabilities. Sometimes those systems don\'t communicate effectively, forcing employees to manually transfer information or repeat the same work across multiple platforms.\n\nAt Arous AI, we start by understanding your existing technology and how it supports your day-to-day operations. We look for opportunities to improve workflows, connect systems, eliminate unnecessary manual work, and introduce AI capabilities where they provide meaningful value.\n\nIn some cases, the right solution may involve integrating an AI receptionist with your existing phone system, connecting your CRM to automated customer follow-ups, or improving processes without purchasing additional software.\n\nIf new technology is needed, we\'ll explain why, how it fits into your existing environment, and what business problem it is intended to solve.\n\nOur goal is to help you get more value from the tools you already have, not sell you software simply because it\'s available.',
+    'ai_replacing': 'At Arous AI, we believe technology should support people, not simply replace them.\n\nMany businesses have talented employees spending valuable time on repetitive administrative tasks, answering the same questions, entering information into multiple systems, or managing routine customer communications.\n\nOur approach is to identify where AI and automation can take on those repetitive activities, allowing employees to focus on customer relationships, problem-solving, and the work that requires their experience and judgment.\n\nAI can also help your business respond to customers after hours, capture opportunities when your team is unavailable, and improve consistency without requiring employees to be available around the clock.\n\nWe evaluate how people, processes, and technology work together, then design solutions that support your team and help your business operate more efficiently.\n\nThe goal isn\'t simply to automate more. It\'s to make your employees more effective and create better experiences for your customers.',
+  };
+
+  function pageFAQAnswer(question, answer) {
+    return function(p) {
+      p.appendChild(titleBlock(question));
+      p.appendChild(contentBlock(answer));
+      p.appendChild(navRow([
+        { label: '⬅ FAQs',         action: function(){ setPage(pageFAQs()); } },
+        { label: '🏠 Main Menu',   action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageFAQs() {
+    return function(p) {
+      p.appendChild(titleBlock('Frequently Asked Questions'));
+      p.appendChild(contentBlock('If you don\'t see your question listed, feel free to ask me. I\'m happy to help.'));
+      p.appendChild(btnStack([
+        { label: '❓ What happens during an assessment?',       action: function(){ setPage(pageFAQAnswer('What happens during an assessment?',       faqAnswers['what_happens'])); } },
+        { label: '⏱️ How long does an assessment take?',        action: function(){ setPage(pageFAQAnswer('How long does an assessment take?',        faqAnswers['how_long'])); } },
+        { label: '🔍 What kinds of issues can be identified?',  action: function(){ setPage(pageFAQAnswer('What kinds of issues can be identified?',  faqAnswers['what_issues'])); } },
+        { label: '🏢 What types of businesses benefit most?',   action: function(){ setPage(pageFAQAnswer('What types of businesses benefit most?',   faqAnswers['what_types'])); } },
+        { label: '💻 Do I need new software?',                  action: function(){ setPage(pageFAQAnswer('Do I need new software?',                  faqAnswers['software'])); } },
+        { label: '🤖 Is AI replacing employees?',               action: function(){ setPage(pageFAQAnswer('Is AI replacing employees?',               faqAnswers['ai_replacing'])); } },
+      ]));
+      p.appendChild(navRow([
+        { label: '\u2B05 Services',   action: function(){ setPage(pageServicesMenu()); } },
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageBizChallenges() {
+    return function(p) {
+      p.appendChild(titleBlock('Business Challenges'));
+      p.appendChild(contentBlock('Here are the most common challenges we help businesses solve:\n\nFor local service businesses:\n\u{1F4F5} Missed calls while on a job — leads going cold before you can call back\n\u{1F319} No way to handle after-hours inquiries — customers calling competitors instead\n\u{1F501} Repetitive questions eating up your time — pricing, hours, availability\n\u{1F310} A website that doesn\'t actively bring in business\n\nFor growing organizations:\n\u{1F504} Disconnected workflows and manual processes slowing teams down\n\u2753 Uncertainty about where AI can actually add value — and where it can\'t\n\u{1F4CA} No clear picture of operational readiness before investing in new technology\n\u{1F9E9} Teams spending time on repetitive tasks that could be automated\n\nDoes any of this sound familiar? Tell me a little about your business or the challenge you\'re trying to solve below.'));
+      p.appendChild(navRow([
+        { label: '💬 Talk to Daniel', action: function(){ setPage(pageTalkToDaniel()); } },
+        { label: '🏠 Main Menu',      action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+  function pageTalkToDaniel(backAction) {
+    return function(p) {
+      p.appendChild(titleBlock('Talk to Daniel'));
+
+      var info = document.createElement('div');
+      info.className = 'arous-menu-content';
+      info.innerHTML = [
+        'Daniel DeSandre',
+        'Founder, Arous AI',
+        '',
+        'Phone / Text: <a href="tel:6292483707" style="color:#a78bfa;text-decoration:underline;">(629) 248-3707</a>',
+        'Email: <a href="mailto:hello@arous.ai" style="color:#a78bfa;text-decoration:underline;">hello@arous.ai</a>',
+        '',
+        'Based in Thompson\'s Station, TN — serving Middle Tennessee and organizations remotely nationwide.',
+        '',
+        'Or share your name and the best number to reach you and Daniel will follow up personally.'
+      ].join('<br>');
+      p.appendChild(info);
+
+      p.appendChild(navRow([
+        { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+      ].concat(backAction ? [backAction] : [])));
+    };
+  }
+
+  function pageAISolution(name, body) {
+    return function(p) {
+      p.appendChild(titleBlock(name));
+      p.appendChild(contentBlock(body));
+      p.appendChild(navRow([
+        { label: '💬 Talk to Daniel', action: function(){ setPage(pageTalkToDaniel({ label: '\u2B05 AI Solutions', action: function(){ setPage(pageAISolutionsMenu()); } })); } },
+        { label: '\u2B05 AI Solutions',   action: function(){ setPage(pageAISolutionsMenu()); } },
+        { label: '🏠 Main Menu',     action: function(){ setPage(pageMainMenu()); } },
+      ]));
+    };
+  }
+
+    // ─── EVENTS ───────────────────────────────────────────────────────────────
+  wrap.onclick = function () {
+    win.classList.toggle('open');
+    if (win.classList.contains('open')) trackEvent('widget_open', 'Arous Widget Opened', '');
+  };
+  document.getElementById('arous-close').onclick = function () { win.classList.remove('open'); };
+  document.getElementById('arous-send').onclick = function() { sendMessage(); };
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // ─── SEND MESSAGE ─────────────────────────────────────────────────────────
+  var BUTTON_LABELS = {
+    'About Arous': '👋 About Arous',
+    'Who We Help': '👥 Who We Help',
+    'What We Do': '📋 What We Do',
+    'Business Challenges': '💡 Business Challenges',
+    'Talk to Daniel': '💬 Talk to Daniel',
+    'I would like to schedule a Lost Opportunities Assessment': '🔍 Lost Opportunities Assessment',
+    'I would like to schedule a Business Operations Assessment': '📊 Business Operations Assessment',
+  };
+
+  var PANEL_RESPONSES = {
+    'About Arous': true,
+    'Who We Help': true,
+    'What We Do': true,
+  };
+
+  async function sendMessage(fromButton) {
+    var text = input.value.trim();
+    if (!text) return;
+    var isPanelResponse = PANEL_RESPONSES[text] || false;
+    var displayText = BUTTON_LABELS[text] || text;
+    if (!fromButton) addMsg(displayText, 'user');
+    input.value = '';
+
+    setPage(function(p) {
+      var t = el('div', {});
+      t.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:12px;color:#a78bfa;padding:6px 0;';
+      t.innerHTML = '🧠 Thinking...';
+      p.appendChild(t);
+    });
+
+    try {
+      var res = await fetch(WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId: SESSION_ID })
+      });
+      var data = await res.json();
+      var r = Array.isArray(data)
+        ? ((data[0] && data[0].output) || (data[0] && data[0].message) || 'OK.')
+        : (data.output || data.message || data.response || 'OK.');
+      var botText = r.replace(/##LC##/g, '').trim();
+
+      var isAssessmentSelection = text === 'I would like to schedule a Lost Opportunities Assessment' ||
+                                   text === 'I would like to schedule a Business Operations Assessment';
+      if (isAssessmentSelection) {
+        // Render response inside panel so it's cleared on next navigation
+        setPage(function(p) {
+          var resp = el('div', { className: 'arous-menu-content' });
+          resp.textContent = botText;
+          p.appendChild(resp);
+          p.appendChild(navRow([
+            { label: '⬅ Services',   action: function(){ setPage(pageServicesMenu()); } },
+            { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+          ]));
+        });
+        // Scroll to top of panel so user sees response from the beginning
+        menuPanel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      } else if (isPanelResponse) {
+        var _panelText = text;
+        setPage(function(p) {
+          var resp = el('div', { className: 'arous-menu-content' });
+          resp.textContent = botText;
+          p.appendChild(resp);
+          if (_panelText === 'About Arous') {
+            p.appendChild(btnStack([
+              { label: '👥 Who We Help', action: function(){ input.value = 'Who We Help'; sendMessage(true); } },
+              { label: '📋 What We Do',  action: function(){ input.value = 'What We Do';  sendMessage(true); } },
+            ]));
+          }
+          var navItems = [
+            { label: '🏠 Main Menu', action: function(){ setPage(pageMainMenu()); } },
+          ];
+          if (_panelText === 'What We Do') {
+            navItems.unshift({ label: '🛠 Services', action: function(){ setPage(pageServicesMenu()); } });
+          }
+          if (_panelText === 'Who We Help' || _panelText === 'What We Do') {
+            navItems.unshift({ label: '\u2B05 About Arous', action: function(){ input.value = 'About Arous'; sendMessage(true); } });
+          }
+          p.appendChild(navRow(navItems));
+        });
+        menuPanel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      } else {
+        addMsg(botText, 'bot');
+        setPage(pageMainMenu());
+        menuPanel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }
+
+    } catch (e) {
+      addMsg('Something went wrong. Please try again.', 'bot');
+      setPage(pageMainMenu());
+    }
+  }
+
+  // ─── GLOBAL HOOKS ────────────────────────────────────────────────────────
+  // Call from any Framer button or page element to control the concierge.
+  window.arousOpen = function() {
+    win.classList.add('open');
+    trackEvent('widget_open', 'Arous Widget Opened', '');
+    setPage(pageMainMenu());
+  };
+  window.arousClose = function() {
+    win.classList.remove('open');
+  };
+  window.arousToggle = function() {
+    win.classList.toggle('open');
+    if (win.classList.contains('open')) trackEvent('widget_open', 'Arous Widget Opened', '');
+  };
+  window.arousOpenAssessment = function() {
+    win.classList.add('open');
+    trackEvent('widget_open', 'Arous Widget Opened', '');
+    setPage(pageAssessmentMenu());
+  };
+
+  // ─── DATA ATTRIBUTE WIRING ───────────────────────────────────────────────
+  // Any element on the page with data-arous="open-assessment" will
+  // open the chatbot directly to the assessment menu on click.
+  // In Framer: select element → right panel → Attributes → add data-arous = open-assessment
+  function wireArousButtons() {
+    var els = document.querySelectorAll('[data-arous="open-assessment"]');
+    for (var i = 0; i < els.length; i++) {
+      els[i].addEventListener('click', function(e) {
+        e.preventDefault();
+        window.arousOpenAssessment();
+      });
+    }
+  }
+  // Run on DOM ready and after a short delay to catch Framer's late renders
+  wireArousButtons();
+  setTimeout(wireArousButtons, 1000);
+  setTimeout(wireArousButtons, 2500);
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────
+  addMsg(GREETING, 'bot');
+  setPage(pageMainMenu());
+
+})();
